@@ -1,0 +1,45 @@
+{
+	"schemaVersion": 1,
+	"id": "itemzoomer",
+	"version": "${version}",
+	"name": "Item Zoomer",
+	"description": "modmenu.descriptionTranslation.itemzoomer",
+	"authors": [
+		"iMeeTake"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/itemzoomer"
+	},
+	"license": "All Rights Reserved",
+	"icon": "assets/itemzoomer/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"main": [
+			"com.imeetake.itemzoomer.ItemZoomer"
+		],
+		"client": [
+			"com.imeetake.itemzoomer.ItemZoomerClient"
+		],
+		"modmenu": [
+			"com.imeetake.itemzoomer.ItemZoomerModMenu"
+		]
+	},
+	"mixins": [
+		"itemzoomer.mixins.json",
+		{
+			"config": "itemzoomer.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.13",
+		"minecraft": "1.21.4",
+		"java": ">=21",
+		"fabric-api": "*",
+		"cloth-config": "*",
+		"modmenu": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

@@ -1,0 +1,8 @@
+{
+  "text.autoconfig.itemzoomer.title": "ItemZoomer Config",
+
+  "text.autoconfig.itemzoomer.option.enabled": "Enable zoom feature",
+  "text.autoconfig.itemzoomer.option.enabled.@Tooltip": "Toggle whether the zoom feature is active.",
+
+  "modmenu.descriptionTranslation.itemzoomer": "Zoom in on hovered items in the inventory."
+}
