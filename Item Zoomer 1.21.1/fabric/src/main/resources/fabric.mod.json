@@ -1,0 +1,51 @@
+{
+    "schemaVersion": 1,
+    "id": "itemzoomer",
+    "version": "${version}",
+    "name": "Item Zoomer",
+    "description": "modmenu.descriptionTranslation.itemzoomer",
+    "authors": [
+        "iMeeTake"
+    ],
+    "contact": {
+        "homepage": "https://www.curseforge.com/minecraft/mc-mods/itemzoomer",
+        "sources": "https://github.com/iMeeTake/ItemZoomer",
+        "issues": "https://github.com/iMeeTake/ItemZoomer/issues"
+    },
+    "license": "MIT",
+    "icon": "assets/itemzoomer/icon.png",
+    "environment": "client",
+    "entrypoints": {
+        "main": [
+            "com.imeetake.itemzoomer.fabric.ItemZoomerFabric"
+        ],
+        "client": [
+            "com.imeetake.itemzoomer.fabric.client.ItemZoomerFabricClient"
+        ],
+        "modmenu": [
+            "com.imeetake.itemzoomer.fabric.ModMenuIntegration"
+        ]
+    },
+    "mixins": [
+        "itemzoomer.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=0.18.3",
+        "minecraft": "1.21.1",
+        "java": ">=21",
+        "architectury": ">=13.0.8",
+        "fabric-api": "*",
+        "cloth-config": "*"
+    },
+    "custom": {
+        "modmenu": {
+            "links": {
+                "modmenu.modrinth": "https://modrinth.com/mod/itemzoomer",
+                "modmenu.discord": "https://discord.gg/ZBzupfYZ6K"
+            }
+        }
+    },
+    "suggests": {
+        "another-mod": "*"
+    }
+}

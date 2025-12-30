@@ -1,8 +1,0 @@
-{
-  "text.autoconfig.itemzoomer.title": "Конфигурация ItemZoomer",
-
-  "text.autoconfig.itemzoomer.option.enabled": "Включить функцию зума",
-  "text.autoconfig.itemzoomer.option.enabled.@Tooltip": "Включает или отключает функцию приближения предметов.",
-
-  "modmenu.descriptionTranslation.itemzoomer": "Увеличение предметов при наведении в инвентаре."
-}
