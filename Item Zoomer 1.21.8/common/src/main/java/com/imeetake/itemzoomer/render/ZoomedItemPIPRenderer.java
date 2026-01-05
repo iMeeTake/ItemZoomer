@@ -1,6 +1,8 @@
 package com.imeetake.itemzoomer.render;
 
+import com.imeetake.itemzoomer.mixin.PIPRendererAccessor;
 import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -35,25 +37,36 @@ public class ZoomedItemPIPRenderer extends PictureInPictureRenderer<ZoomedItemRe
 
         ItemStackRenderState itemState = state.itemStackRenderState();
 
+        Minecraft mc = Minecraft.getInstance();
         boolean usesBlockLight = itemState.usesBlockLight();
+
         if (usesBlockLight) {
-            Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
+            mc.gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
         } else {
-            Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_FLAT);
+            mc.gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_FLAT);
         }
 
         itemState.render(poseStack, this.bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
     }
 
     @Override
-    public void blitTexture(ZoomedItemRenderState state, GuiRenderState guiRenderState) {
+    protected void blitTexture(ZoomedItemRenderState state, GuiRenderState guiRenderState) {
+        GpuTextureView textureView = ((PIPRendererAccessor) this).itemzoomer$getTextureView();
+        if (textureView == null) {
+            return;
+        }
+
         float alpha = state.alpha();
-        int intAlpha = (int) (alpha * 255);
-        int color = (intAlpha << 24) | 0xFFFFFF;
+        int intAlpha = Math.min(255, Math.max(0, (int) (alpha * 255)));
+
+        int r = (int) (255 * alpha);
+        int g = (int) (255 * alpha);
+        int b = (int) (255 * alpha);
+        int color = ARGB.color(intAlpha, r, g, b);
 
         guiRenderState.submitBlitToCurrentLayer(new BlitRenderState(
-                RenderPipelines.GUI_TEXTURED,
-                TextureSetup.singleTexture(getTextureView()),
+                RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
+                TextureSetup.singleTexture(textureView),
                 state.pose(),
                 (int) state.renderX0(),
                 (int) state.renderY0(),
@@ -67,16 +80,6 @@ public class ZoomedItemPIPRenderer extends PictureInPictureRenderer<ZoomedItemRe
                 state.scissorArea(),
                 (ScreenRectangle) null
         ));
-    }
-
-    protected com.mojang.blaze3d.textures.GpuTextureView getTextureView() {
-        try {
-            java.lang.reflect.Field field = PictureInPictureRenderer.class.getDeclaredField("textureView");
-            field.setAccessible(true);
-            return (com.mojang.blaze3d.textures.GpuTextureView) field.get(this);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     @Override

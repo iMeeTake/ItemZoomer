@@ -1,26 +1,17 @@
 package com.imeetake.itemzoomer.render;
 
+import com.mojang.blaze3d.Blaze3D;
 import net.minecraft.world.item.ItemStack;
 
 public class AnimationState {
 
     private ItemStack currentStack = ItemStack.EMPTY;
-    private float animationStartTime = 0;
+    private double animationStartTime = 0;
     private boolean isActive = false;
-    private float currentTime = 0;
-    private long lastNanoTime = 0;
-    private int stableFrames = 0;
 
     private static final float APPEAR_DURATION = 0.3f;
-    private static final int MIN_STABLE_FRAMES = 2;
 
     public void beginFrame() {
-        long now = System.nanoTime();
-        if (lastNanoTime > 0) {
-            float deltaSec = (now - lastNanoTime) / 1_000_000_000f;
-            currentTime += deltaSec;
-        }
-        lastNanoTime = now;
     }
 
     public void update(ItemStack stack) {
@@ -31,11 +22,8 @@ public class AnimationState {
 
         if (!ItemStack.matches(currentStack, stack)) {
             currentStack = stack.copy();
-            animationStartTime = currentTime;
+            animationStartTime = Blaze3D.getTime();
             isActive = true;
-            stableFrames = 0;
-        } else if (isActive) {
-            stableFrames++;
         }
     }
 
@@ -43,17 +31,16 @@ public class AnimationState {
         currentStack = ItemStack.EMPTY;
         animationStartTime = 0;
         isActive = false;
-        stableFrames = 0;
     }
 
-    public boolean isStable() {
-        return stableFrames >= MIN_STABLE_FRAMES;
+    private float getElapsed() {
+        return (float) (Blaze3D.getTime() - animationStartTime);
     }
 
     public float getAppearProgress(boolean hasAnimation, int delayMs) {
-        if (!isActive || !isStable()) return 0.0f;
+        if (!isActive) return 0.0f;
 
-        float elapsed = currentTime - animationStartTime;
+        float elapsed = getElapsed();
         float delaySec = delayMs / 1000.0f;
 
         if (hasAnimation && delaySec > 0) {
@@ -66,13 +53,13 @@ public class AnimationState {
     }
 
     public float getHoverDuration() {
-        if (!isActive || !isStable()) return 0.0f;
-        return currentTime - animationStartTime;
+        if (!isActive) return 0.0f;
+        return getElapsed();
     }
 
     public float getIdleAnimationTime(boolean hasAppearAnimation, int delayMs) {
-        if (!isActive || !isStable()) return 0.0f;
-        float elapsed = currentTime - animationStartTime;
+        if (!isActive) return 0.0f;
+        float elapsed = getElapsed();
         float delaySec = delayMs / 1000.0f;
         if (hasAppearAnimation && delaySec > 0) {
             float delayedElapsed = elapsed - delaySec;
@@ -83,7 +70,7 @@ public class AnimationState {
     }
 
     public boolean isActive() {
-        return isActive && isStable();
+        return isActive;
     }
 
     public ItemStack getCurrentStack() {
@@ -91,11 +78,11 @@ public class AnimationState {
     }
 
     public boolean shouldShowInfo(int delaySeconds) {
-        return isStable() && getHoverDuration() >= delaySeconds;
+        return isActive && getHoverDuration() >= delaySeconds;
     }
 
     public float getTextAppearProgress(int delaySeconds) {
-        if (!isStable()) return 0.0f;
+        if (!isActive) return 0.0f;
         float hoverDuration = getHoverDuration();
         if (hoverDuration < delaySeconds) return 0.0f;
 

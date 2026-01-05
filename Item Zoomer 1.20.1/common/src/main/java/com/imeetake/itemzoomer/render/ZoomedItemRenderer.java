@@ -296,7 +296,6 @@ public class ZoomedItemRenderer {
         pose.popPose();
 
         renderItemCount(graphics, mc, stack, x, y, size);
-        renderDurabilityBar(graphics, stack, x, y, size);
     }
 
     private static void renderItemCount(GuiGraphics graphics, Minecraft mc, ItemStack stack, float x, float y, int size) {
@@ -310,25 +309,6 @@ public class ZoomedItemRenderer {
         float textY = y + size - font.lineHeight;
 
         graphics.drawString(font, text, (int) textX, (int) textY, 0xFFFFFF, true);
-    }
-
-    private static void renderDurabilityBar(GuiGraphics graphics, ItemStack stack, float x, float y, int size) {
-        if (!stack.isDamaged()) return;
-
-        int maxDamage = stack.getMaxDamage();
-        int damage = stack.getDamageValue();
-        float durability = (float) (maxDamage - damage) / maxDamage;
-
-        int barWidth = Math.round(durability * (size - 4));
-        int barX = (int) (x + 2);
-        int barY = (int) (y + size - 4);
-
-        int green = (int) (durability * 255);
-        int red = 255 - green;
-        int color = 0xFF000000 | (red << 16) | (green << 8);
-
-        graphics.fill(barX, barY, barX + size - 4, barY + 2, 0xFF000000);
-        graphics.fill(barX, barY, barX + barWidth, barY + 2, color);
     }
 
     private static void renderTextToBuffer(GuiGraphics graphics, Minecraft mc, ItemStack stack,

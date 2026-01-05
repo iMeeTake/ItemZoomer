@@ -7,7 +7,8 @@
       "AbstractContainerScreenMixin",
       "AbstractRecipeBookScreenMixin",
       "GuiGraphicsAccessor",
-      "GuiRenderStateAccessor"
+      "GuiRenderStateAccessor",
+      "PIPRendererAccessor"
   ],
   "mixins": [
   ],

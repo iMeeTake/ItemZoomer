@@ -1,5 +1,6 @@
 package com.imeetake.itemzoomer.render;
 
+import com.imeetake.itemzoomer.mixin.PictureInPictureRendererAccessor;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -15,7 +16,7 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import com.imeetake.itemzoomer.mixin.PictureInPictureRendererAccessor;
+import net.minecraft.util.ARGB;
 
 public class ZoomedItemPIPRenderer extends PictureInPictureRenderer<ZoomedItemRenderState> {
 
@@ -54,14 +55,21 @@ public class ZoomedItemPIPRenderer extends PictureInPictureRenderer<ZoomedItemRe
 
     @Override
     protected void blitTexture(ZoomedItemRenderState state, GuiRenderState guiRenderState) {
-        float alpha = state.alpha();
-        int intAlpha = (int) (alpha * 255);
-        int color = (intAlpha << 24) | 0xFFFFFF;
-
         GpuTextureView textureView = ((PictureInPictureRendererAccessor) this).itemzoomer$getTextureView();
+        if (textureView == null) {
+            return;
+        }
+
+        float alpha = state.alpha();
+        int intAlpha = Math.min(255, Math.max(0, (int) (alpha * 255)));
+
+        int r = (int) (255 * alpha);
+        int g = (int) (255 * alpha);
+        int b = (int) (255 * alpha);
+        int color = ARGB.color(intAlpha, r, g, b);
 
         guiRenderState.submitBlitToCurrentLayer(new BlitRenderState(
-                RenderPipelines.GUI_TEXTURED,
+                RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
                 TextureSetup.singleTexture(textureView),
                 state.pose(),
                 (int) state.renderX0(),

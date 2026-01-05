@@ -21,9 +21,6 @@ public class ItemZoomerConfig implements ConfigData {
     }
 
     public static ItemZoomerConfig get() {
-        if (INSTANCE == null) {
-            throw new IllegalStateException("You forgot to initialize the config again, iMeeTake! Hey, if you're reading this :D");
-        }
         return INSTANCE;
     }
 
