@@ -2,6 +2,7 @@ package com.imeetake.itemzoomer.render;
 
 import com.imeetake.itemzoomer.ItemZoomer;
 import com.imeetake.itemzoomer.accessor.ContainerScreenAccessor;
+import com.imeetake.itemzoomer.compat.HoveredStackProviderRegistry;
 import com.imeetake.itemzoomer.config.ItemZoomerConfig;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -11,11 +12,14 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.Slot;
@@ -29,6 +33,8 @@ import java.util.List;
 public class ZoomedItemRenderer {
 
     private static final int PADDING = 5;
+    private static final int BASE_SIZE = 115;
+    private static final float BACKING_SCREEN_SIZE_SCALE = 0.95f;
     private static final AnimationState animationState = new AnimationState();
 
     private static RenderTarget renderTarget = null;
@@ -40,56 +46,96 @@ public class ZoomedItemRenderer {
         animationState.beginFrame();
     }
 
-    public static void render(GuiGraphics graphics, AbstractContainerScreen<?> screen, int mouseX, int mouseY) {
+    public static void render(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
         if (!ItemZoomer.isEnabled()) {
             animationState.reset();
             return;
         }
 
         ItemZoomerConfig config = ItemZoomerConfig.get();
+        ContainerScreenAccessor accessor = screen instanceof ContainerScreenAccessor currentAccessor ? currentAccessor : null;
+        AbstractContainerScreen<?> containerScreen = screen instanceof AbstractContainerScreen<?> currentScreen ? currentScreen : null;
 
-        if (!(screen instanceof ContainerScreenAccessor accessor)) {
-            animationState.reset();
+        ItemStack liveStack = null;
+
+        if (accessor != null) {
+            Slot hoveredSlot = accessor.itemzoomer$getHoveredSlot();
+            if (hoveredSlot != null && hoveredSlot.hasItem()) {
+                liveStack = hoveredSlot.getItem();
+            }
+        }
+
+        if (liveStack == null || liveStack.isEmpty()) {
+            ItemStack compatStack = HoveredStackProviderRegistry.getHoveredStack(mouseX, mouseY);
+            if (compatStack != null && !compatStack.isEmpty()) {
+                liveStack = compatStack;
+            }
+        }
+
+        if (liveStack != null && !liveStack.isEmpty()
+                && containerScreen != null && accessor != null
+                && isLeftSideBlocked(containerScreen, accessor)) {
+            liveStack = null;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+        boolean hasAppearAnimation = config.appearAnimation != ItemZoomerConfig.AppearAnimation.NONE;
+        Object renderIdentity = null;
+        if (liveStack != null && !liveStack.isEmpty()) {
+            BakedModel renderModel = mc.getItemRenderer().getModel(liveStack, mc.level, mc.player, 0);
+            renderIdentity = renderModel != null ? renderModel : liveStack.getItem();
+        }
+
+        animationState.update(liveStack, renderIdentity, hasAppearAnimation, config.appearDelayMs, config.infoDelaySeconds);
+
+        ItemStack stack = animationState.getRenderStack();
+        if (stack == null || stack.isEmpty()) {
             return;
         }
 
-        if (isLeftSideBlocked(screen, accessor)) {
-            animationState.reset();
-            return;
+        Rect2i windowBounds = null;
+        boolean fromBackingScreen = false;
+        if (accessor == null) {
+            windowBounds = HoveredStackProviderRegistry.getWindowBounds();
+            if (windowBounds == null) {
+                AbstractContainerScreen<?> backingScreen = HoveredStackProviderRegistry.getBackingScreen();
+                if (backingScreen instanceof ContainerScreenAccessor backingAccessor) {
+                    accessor = backingAccessor;
+                    fromBackingScreen = true;
+                }
+            }
         }
-
-        Slot hoveredSlot = accessor.itemzoomer$getHoveredSlot();
-
-        if (hoveredSlot == null || !hoveredSlot.hasItem()) {
-            animationState.reset();
-            return;
-        }
-
-        ItemStack stack = hoveredSlot.getItem();
-        animationState.update(stack);
 
         graphics.flush();
 
-        renderZoomedItem(graphics, accessor, stack, config);
+        if (accessor != null) {
+            float sizeScale = fromBackingScreen ? BACKING_SCREEN_SIZE_SCALE : 1.0f;
+            renderZoomedItem(graphics, accessor, stack, config, sizeScale);
+        } else if (windowBounds != null) {
+            renderZoomedItem(graphics, windowBounds.getX(), windowBounds.getY(), windowBounds.getHeight(), stack, config, 1.0f);
+        } else {
+            int fallbackLeft = Math.min(screen.width / 2, 2 * PADDING + BASE_SIZE);
+            renderZoomedItem(graphics, fallbackLeft, 0, screen.height, stack, config, 1.0f);
+        }
     }
 
-    private static void renderZoomedItem(GuiGraphics graphics, ContainerScreenAccessor accessor, ItemStack stack, ItemZoomerConfig config) {
+    private static void renderZoomedItem(GuiGraphics graphics, ContainerScreenAccessor accessor, ItemStack stack, ItemZoomerConfig config, float sizeScale) {
+        renderZoomedItem(graphics, accessor.itemzoomer$getLeftPos(), accessor.itemzoomer$getTopPos(), accessor.itemzoomer$getImageHeight(), stack, config, sizeScale);
+    }
+
+    private static void renderZoomedItem(GuiGraphics graphics, int guiLeft, int guiTop, int guiHeight, ItemStack stack, ItemZoomerConfig config, float sizeScale) {
         Minecraft mc = Minecraft.getInstance();
 
-        int guiLeft = accessor.itemzoomer$getLeftPos();
-        int guiTop = accessor.itemzoomer$getTopPos();
-        int guiHeight = accessor.itemzoomer$getImageHeight();
-
-        boolean hasAppearAnimation = config.appearAnimation != ItemZoomerConfig.AppearAnimation.NONE;
-        int delayMs = config.appearDelayMs;
-        float progress = animationState.getAppearProgress(hasAppearAnimation, delayMs);
+        float progress = animationState.getAppearProgress();
         if (progress <= 0) return;
 
-        int baseSize = 115;
-        int availableWidth = guiLeft - PADDING * 2;
-        float sizeMultiplier = config.itemSizePercent / 100.0f;
-        int itemSize = (int) (Math.min(baseSize, availableWidth) * sizeMultiplier);
-        itemSize = Math.max(itemSize, 32);
+        int availableWidth = Math.max(0, guiLeft - PADDING * 2);
+        int maxItemSize = availableWidth;
+        if (maxItemSize < 32) return;
+
+        float sizeMultiplier = clamp(config.itemSizePercent, 50, 150) / 100.0f;
+        int itemSize = (int) (Math.min(BASE_SIZE, availableWidth) * sizeMultiplier * sizeScale);
+        itemSize = Math.max(32, Math.min(itemSize, maxItemSize));
 
         int centerX = guiLeft / 2;
         int centerY = guiTop + (guiHeight / 2);
@@ -126,7 +172,7 @@ public class ZoomedItemRenderer {
             }
         }
 
-        float idleTime = animationState.getIdleAnimationTime(hasAppearAnimation, delayMs);
+        float idleTime = animationState.getIdleAnimationTime();
         float idleAngle = 0;
         float idleScale = 1.0f;
 
@@ -143,15 +189,15 @@ public class ZoomedItemRenderer {
         float finalTextX = textX + offsetX;
         float finalTextY = textY + offsetY;
 
-        boolean showInfo = config.showItemInfo && animationState.shouldShowInfo(config.infoDelaySeconds);
+        boolean showInfo = config.showItemInfo && animationState.shouldShowInfo();
 
         if (useClipping) {
-            renderWithAlphaClipped(stack, finalItemX, finalItemY, itemSize, finalScale, idleAngle,
-                    showInfo, finalTextX, finalTextY, true, alpha, config.infoDelaySeconds,
+            renderWithAlphaClipped(graphics, stack, finalItemX, finalItemY, itemSize, finalScale, idleAngle,
+                    showInfo, finalTextX, finalTextY, true, alpha,
                     clipX, clipY, clipWidth, clipHeight);
         } else {
-            renderWithAlpha(stack, finalItemX, finalItemY, itemSize, finalScale, idleAngle,
-                    showInfo, finalTextX, finalTextY, true, alpha, config.infoDelaySeconds);
+            renderWithAlpha(graphics, stack, finalItemX, finalItemY, itemSize, finalScale, idleAngle,
+                    showInfo, finalTextX, finalTextY, true, alpha);
         }
     }
 
@@ -172,11 +218,23 @@ public class ZoomedItemRenderer {
         return false;
     }
 
-    private static void renderWithAlpha(ItemStack stack,
+    private static void renderWithAlpha(GuiGraphics graphics, ItemStack stack,
                                         float itemX, float itemY, int itemSize, float scale, float rotation,
-                                        boolean showInfo, float textX, float textY, boolean textBelowItem, float alpha, int infoDelaySeconds) {
+                                        boolean showInfo, float textX, float textY, boolean textBelowItem, float alpha) {
 
         Minecraft mc = Minecraft.getInstance();
+
+        if (alpha >= 0.999f) {
+            renderItemToBuffer(graphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
+
+            if (showInfo) {
+                float textAlpha = easeOutCubic(animationState.getTextProgress());
+                renderTextToBuffer(graphics, mc, stack, textX, textY, itemSize, textBelowItem, textAlpha);
+            }
+
+            return;
+        }
+
         int windowWidth = mc.getWindow().getWidth();
         int windowHeight = mc.getWindow().getHeight();
         int guiWidth = mc.getWindow().getGuiScaledWidth();
@@ -196,7 +254,7 @@ public class ZoomedItemRenderer {
         renderItemToBuffer(fboGraphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
 
         if (showInfo) {
-            float textAlpha = easeOutCubic(animationState.getTextAppearProgress(infoDelaySeconds));
+            float textAlpha = easeOutCubic(animationState.getTextProgress());
             renderTextToBuffer(fboGraphics, mc, stack, textX, textY, itemSize, textBelowItem, textAlpha);
         }
 
@@ -207,9 +265,9 @@ public class ZoomedItemRenderer {
         blitWithAlpha(renderTarget, guiWidth, guiHeight, alpha);
     }
 
-    private static void renderWithAlphaClipped(ItemStack stack,
+    private static void renderWithAlphaClipped(GuiGraphics graphics, ItemStack stack,
                                                float itemX, float itemY, int itemSize, float scale, float rotation,
-                                               boolean showInfo, float textX, float textY, boolean textBelowItem, float alpha, int infoDelaySeconds,
+                                               boolean showInfo, float textX, float textY, boolean textBelowItem, float alpha,
                                                int clipX, int clipY, int clipWidth, int clipHeight) {
 
         Minecraft mc = Minecraft.getInstance();
@@ -232,7 +290,7 @@ public class ZoomedItemRenderer {
         renderItemToBuffer(fboGraphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
 
         if (showInfo) {
-            float textAlpha = easeOutCubic(animationState.getTextAppearProgress(infoDelaySeconds));
+            float textAlpha = easeOutCubic(animationState.getTextProgress());
             renderTextToBuffer(fboGraphics, mc, stack, textX, textY, itemSize, textBelowItem, textAlpha);
         }
 
@@ -496,6 +554,10 @@ public class ZoomedItemRenderer {
 
     private static float easeOutCubic(float t) {
         return 1 - (float) Math.pow(1 - t, 3);
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     public static void cleanup() {

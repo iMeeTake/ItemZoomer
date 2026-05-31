@@ -12,6 +12,10 @@ public record ZoomedItemRenderState(
         float renderY0,
         float renderX1,
         float renderY1,
+        float modelScale,
+        float modelOffsetX,
+        float modelOffsetY,
+        float contentScale,
         float rotation,
         float alpha,
         @Nullable ScreenRectangle scissor
@@ -39,7 +43,7 @@ public record ZoomedItemRenderState(
 
     @Override
     public float scale() {
-        return renderX1 - renderX0;
+        return modelScale;
     }
 
     @Override

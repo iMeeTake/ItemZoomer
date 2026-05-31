@@ -11,7 +11,7 @@ authors = "iMeeTake"
 description = '''
 Zoom in on hovered items in the inventory.
 '''
-#logoFile = ""
+logoFile = "itemzoomer.png"
 
 [[dependencies.itemzoomer]]
 modId = "forge"
@@ -33,3 +33,24 @@ mandatory = true
 versionRange = "[9.2.14,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[dependencies.itemzoomer]]
+modId = "cloth_config"
+mandatory = true
+versionRange = "[11.1.118,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.itemzoomer]]
+modId = "jei"
+mandatory = false
+versionRange = "[15.0,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.itemzoomer]]
+modId = "rei"
+mandatory = false
+versionRange = "[12.0,)"
+ordering = "AFTER"
+side = "CLIENT"

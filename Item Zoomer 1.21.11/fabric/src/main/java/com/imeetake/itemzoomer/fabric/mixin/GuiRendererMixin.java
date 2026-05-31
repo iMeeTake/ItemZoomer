@@ -11,12 +11,14 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,7 @@ public class GuiRendererMixin {
 
     @Shadow
     @Final
+    @Mutable
     private Map<Class<? extends PictureInPictureRenderState>, PictureInPictureRenderer<?>> pictureInPictureRenderers;
 
     @Shadow
@@ -37,8 +40,9 @@ public class GuiRendererMixin {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void itemzoomer$onInit(GuiRenderState guiRenderState, MultiBufferSource.BufferSource bufferSource, SubmitNodeCollector submitNodeCollector, FeatureRenderDispatcher featureRenderDispatcher, List<PictureInPictureRenderer<?>> list, CallbackInfo ci) {
         itemzoomer$zoomedItemRenderer = new ZoomedItemPIPRenderer(this.bufferSource);
-        ((Map<Class<? extends PictureInPictureRenderState>, PictureInPictureRenderer<?>>) pictureInPictureRenderers)
-                .put(ZoomedItemRenderState.class, itemzoomer$zoomedItemRenderer);
+        Map<Class<? extends PictureInPictureRenderState>, PictureInPictureRenderer<?>> renderers = new HashMap<>(this.pictureInPictureRenderers);
+        renderers.put(ZoomedItemRenderState.class, itemzoomer$zoomedItemRenderer);
+        this.pictureInPictureRenderers = renderers;
     }
 
     @Inject(method = "close", at = @At("HEAD"))

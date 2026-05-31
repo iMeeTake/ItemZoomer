@@ -3,6 +3,7 @@ package com.imeetake.itemzoomer.neoforge.client;
 import com.imeetake.itemzoomer.ItemZoomer;
 import com.imeetake.itemzoomer.neoforge.ItemZoomerNeoForge;
 import com.imeetake.itemzoomer.render.ZoomedItemRenderer;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.neoforged.api.distmarker.Dist;
@@ -14,44 +15,55 @@ import net.neoforged.neoforge.event.GameShuttingDownEvent;
 @EventBusSubscriber(modid = ItemZoomer.MOD_ID, value = Dist.CLIENT)
 public class ItemZoomerNeoForgeClient {
 
+    private static boolean toggleKeyDown;
+
     @SubscribeEvent
     public static void onScreenRenderPre(ScreenEvent.Render.Pre event) {
-        if (event.getScreen() instanceof AbstractContainerScreen<?>) {
-            ZoomedItemRenderer.beginFrame();
-        }
+        ZoomedItemRenderer.beginFrame();
     }
 
     @SubscribeEvent
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
-        if (event.getScreen() instanceof AbstractContainerScreen<?> containerScreen) {
-            ZoomedItemRenderer.render(
-                    event.getGuiGraphics(),
-                    containerScreen,
-                    event.getMouseX(),
-                    event.getMouseY()
-            );
-        }
+        ZoomedItemRenderer.render(
+                event.getGuiGraphics(),
+                event.getScreen(),
+                event.getMouseX(),
+                event.getMouseY()
+        );
     }
 
     @SubscribeEvent
     public static void onKeyPress(ScreenEvent.KeyPressed.Post event) {
-        if (ItemZoomerNeoForge.toggleKey != null) {
-            KeyEvent keyEvent = new KeyEvent(event.getKeyCode(), event.getScanCode(), event.getModifiers());
-            if (ItemZoomerNeoForge.toggleKey.matches(keyEvent)) {
+        KeyEvent keyEvent = event.getKeyEvent();
+        if (ItemZoomerNeoForge.ClientInit.matchesToggle(keyEvent)) {
+            if (!toggleKeyDown && event.getScreen() instanceof AbstractContainerScreen<?> containerScreen && shouldHandleToggle(containerScreen)) {
+                toggleKeyDown = true;
                 ItemZoomer.toggle();
             }
         }
     }
 
     @SubscribeEvent
-    public static void onScreenClose(ScreenEvent.Closing event) {
-        if (event.getScreen() instanceof AbstractContainerScreen<?>) {
-            ZoomedItemRenderer.onScreenClose();
+    public static void onKeyRelease(ScreenEvent.KeyReleased.Post event) {
+        KeyEvent keyEvent = event.getKeyEvent();
+        if (ItemZoomerNeoForge.ClientInit.matchesToggle(keyEvent)) {
+            toggleKeyDown = false;
         }
     }
 
     @SubscribeEvent
+    public static void onScreenClose(ScreenEvent.Closing event) {
+        toggleKeyDown = false;
+        ZoomedItemRenderer.onScreenClose();
+    }
+
+    @SubscribeEvent
     public static void onGameShutdown(GameShuttingDownEvent event) {
+        toggleKeyDown = false;
         ZoomedItemRenderer.cleanup();
+    }
+
+    private static boolean shouldHandleToggle(AbstractContainerScreen<?> screen) {
+        return !(screen.getFocused() instanceof EditBox);
     }
 }

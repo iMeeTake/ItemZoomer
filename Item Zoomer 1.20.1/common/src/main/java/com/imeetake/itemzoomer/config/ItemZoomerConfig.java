@@ -5,19 +5,16 @@ import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
-import me.shedaniel.autoconfig.gui.registry.GuiRegistry;
 
 @Config(name = "itemzoomer")
 public class ItemZoomerConfig implements ConfigData {
 
+    @ConfigEntry.Gui.Excluded
     private static ItemZoomerConfig INSTANCE;
 
     public static void init() {
         AutoConfig.register(ItemZoomerConfig.class, GsonConfigSerializer::new);
         INSTANCE = AutoConfig.getConfigHolder(ItemZoomerConfig.class).getConfig();
-
-        GuiRegistry registry = AutoConfig.getGuiRegistry(ItemZoomerConfig.class);
-        registry.registerPredicateProvider(new EnumCycleProvider(), field -> field.getType().isEnum());
     }
 
     public static ItemZoomerConfig get() {
@@ -51,6 +48,25 @@ public class ItemZoomerConfig implements ConfigData {
     public void toggleEnabled() {
         this.enabled = !this.enabled;
         AutoConfig.getConfigHolder(ItemZoomerConfig.class).save();
+    }
+
+    @Override
+    public void validatePostLoad() throws ConfigData.ValidationException {
+        appearDelayMs = clamp(appearDelayMs, 0, 1000);
+        itemSizePercent = clamp(itemSizePercent, 50, 150);
+        infoDelaySeconds = clamp(infoDelaySeconds, 0, 10);
+
+        if (appearAnimation == null) {
+            appearAnimation = AppearAnimation.FADE;
+        }
+
+        if (idleAnimation == null) {
+            idleAnimation = IdleAnimation.NONE;
+        }
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     public enum AppearAnimation {

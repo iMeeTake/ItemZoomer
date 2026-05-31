@@ -1,6 +1,7 @@
 package com.imeetake.itemzoomer;
 
 import com.imeetake.itemzoomer.config.ItemZoomerConfig;
+import com.imeetake.itemzoomer.compat.HoveredStackProviderRegistry;
 
 public class ItemZoomer {
     public static final String MOD_ID = "itemzoomer";
@@ -15,5 +16,6 @@ public class ItemZoomer {
 
     public static void init() {
         ItemZoomerConfig.init();
+        HoveredStackProviderRegistry.init();
     }
 }

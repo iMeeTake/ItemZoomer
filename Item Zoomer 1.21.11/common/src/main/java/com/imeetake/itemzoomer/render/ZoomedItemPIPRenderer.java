@@ -34,6 +34,8 @@ public class ZoomedItemPIPRenderer extends PictureInPictureRenderer<ZoomedItemRe
     @Override
     protected void renderToTexture(ZoomedItemRenderState state, PoseStack poseStack) {
         poseStack.scale(1.0F, -1.0F, -1.0F);
+        poseStack.translate(state.modelOffsetX(), state.modelOffsetY(), 0.0F);
+        poseStack.scale(state.contentScale(), state.contentScale(), state.contentScale());
 
         if (state.rotation() != 0) {
             poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(state.rotation()));

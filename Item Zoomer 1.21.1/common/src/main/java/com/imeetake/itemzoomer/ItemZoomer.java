@@ -1,5 +1,6 @@
 package com.imeetake.itemzoomer;
 
+import com.imeetake.itemzoomer.compat.HoveredStackProviderRegistry;
 import com.imeetake.itemzoomer.config.ItemZoomerConfig;
 
 public class ItemZoomer {
@@ -15,5 +16,6 @@ public class ItemZoomer {
 
     public static void init() {
         ItemZoomerConfig.init();
+        HoveredStackProviderRegistry.init();
     }
 }
