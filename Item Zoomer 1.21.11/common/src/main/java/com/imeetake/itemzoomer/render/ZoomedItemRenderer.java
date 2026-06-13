@@ -38,16 +38,52 @@ public class ZoomedItemRenderer {
     private static final float MAX_IDLE_SCALE = 1.02f;
     private static final ModelFootprint NORMAL_MODEL_FOOTPRINT = new ModelFootprint(-0.5f, -0.5f, 0.5f, 0.5f);
     private static final AnimationState animationState = new AnimationState();
+    private static boolean renderedThisFrame = false;
 
     public static void beginFrame() {
         animationState.beginFrame();
+        renderedThisFrame = false;
     }
 
     public static void render(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
+        if (shouldDeferToViewer()) {
+            return;
+        }
+        doRender(graphics, screen, mouseX, mouseY);
+    }
+
+    public static void renderFromViewer(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
+        doRender(graphics, screen, mouseX, mouseY);
+    }
+
+    private static boolean shouldDeferToViewer() {
+        if (ItemZoomerConfig.get().favoritesOverlap != ItemZoomerConfig.FavoritesOverlap.ABOVE) {
+            return false;
+        }
+        return HoveredStackProviderRegistry.shouldDeferAbove();
+    }
+
+    private static boolean overlapsExclusion(int x, int y, int width, int height) {
+        for (Rect2i b : HoveredStackProviderRegistry.getExclusionBounds()) {
+            if (b == null || b.getWidth() <= 0 || b.getHeight() <= 0) continue;
+            if (x < b.getX() + b.getWidth() && x + width > b.getX()
+                    && y < b.getY() + b.getHeight() && y + height > b.getY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void doRender(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
         if (!ItemZoomer.isEnabled()) {
             animationState.reset();
             return;
         }
+
+        if (renderedThisFrame) {
+            return;
+        }
+        renderedThisFrame = true;
 
         ItemZoomerConfig config = ItemZoomerConfig.get();
         ContainerScreenAccessor accessor = screen instanceof ContainerScreenAccessor currentAccessor ? currentAccessor : null;
@@ -200,6 +236,12 @@ public class ZoomedItemRenderer {
 
         boolean showInfo = config.showItemInfo && animationState.shouldShowInfo();
         float textAlpha = showInfo ? easeOutCubic(animationState.getTextProgress()) : 0;
+
+        if (config.favoritesOverlap == ItemZoomerConfig.FavoritesOverlap.HIDE
+                && overlapsExclusion((int) (itemX + offsetX), (int) (itemY + offsetY),
+                        (int) Math.ceil(visualWidth), (int) Math.ceil(visualHeight))) {
+            return;
+        }
 
         GuiRenderState guiRenderState = ((GuiGraphicsAccessor) graphics).itemzoomer$getGuiRenderState();
 

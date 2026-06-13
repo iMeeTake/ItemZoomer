@@ -2,7 +2,10 @@ package com.imeetake.itemzoomer.compat;
 
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.Rect2i;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class EmiHoveredStackProvider implements HoveredStackProvider {
 
@@ -38,6 +41,15 @@ public class EmiHoveredStackProvider implements HoveredStackProvider {
             return EmiHoveredStackHelper.getBackingScreen();
         } catch (Throwable e) {
             return null;
+        }
+    }
+
+    @Override
+    public List<Rect2i> getExclusionBounds() {
+        try {
+            return EmiHoveredStackHelper.getExclusionBounds();
+        } catch (Throwable e) {
+            return List.of();
         }
     }
 }

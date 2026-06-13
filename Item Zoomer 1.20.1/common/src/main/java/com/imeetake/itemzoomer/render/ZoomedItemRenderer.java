@@ -20,6 +20,7 @@ import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.Slot;
@@ -28,7 +29,9 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.joml.Matrix4f;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ZoomedItemRenderer {
 
@@ -41,16 +44,42 @@ public class ZoomedItemRenderer {
     private static int cachedWidth = 0;
     private static int cachedHeight = 0;
     private static boolean initialized = false;
+    private static MultiBufferSource.BufferSource zoomBufferSource = null;
+    private static boolean renderedThisFrame = false;
 
     public static void beginFrame() {
         animationState.beginFrame();
+        renderedThisFrame = false;
     }
 
     public static void render(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
+        if (shouldDeferToViewer()) {
+            return;
+        }
+        doRender(graphics, screen, mouseX, mouseY);
+    }
+
+    public static void renderFromViewer(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
+        doRender(graphics, screen, mouseX, mouseY);
+    }
+
+    private static boolean shouldDeferToViewer() {
+        if (ItemZoomerConfig.get().favoritesOverlap != ItemZoomerConfig.FavoritesOverlap.ABOVE) {
+            return false;
+        }
+        return HoveredStackProviderRegistry.shouldDeferAbove();
+    }
+
+    private static void doRender(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
         if (!ItemZoomer.isEnabled()) {
             animationState.reset();
             return;
         }
+
+        if (renderedThisFrame) {
+            return;
+        }
+        renderedThisFrame = true;
 
         ItemZoomerConfig config = ItemZoomerConfig.get();
         ContainerScreenAccessor accessor = screen instanceof ContainerScreenAccessor currentAccessor ? currentAccessor : null;
@@ -191,14 +220,25 @@ public class ZoomedItemRenderer {
 
         boolean showInfo = config.showItemInfo && animationState.shouldShowInfo();
 
-        if (useClipping) {
-            renderWithAlphaClipped(graphics, stack, finalItemX, finalItemY, itemSize, finalScale, idleAngle,
-                    showInfo, finalTextX, finalTextY, true, alpha,
-                    clipX, clipY, clipWidth, clipHeight);
-        } else {
-            renderWithAlpha(graphics, stack, finalItemX, finalItemY, itemSize, finalScale, idleAngle,
-                    showInfo, finalTextX, finalTextY, true, alpha);
+        if (config.favoritesOverlap == ItemZoomerConfig.FavoritesOverlap.HIDE
+                && overlapsExclusion((int) finalItemX, (int) finalItemY, itemSize, itemSize)) {
+            return;
         }
+
+        renderOffscreen(graphics, stack, finalItemX, finalItemY, itemSize, finalScale, idleAngle,
+                showInfo, finalTextX, finalTextY, alpha,
+                useClipping, clipX, clipY, clipWidth, clipHeight);
+    }
+
+    private static boolean overlapsExclusion(int x, int y, int width, int height) {
+        for (Rect2i b : HoveredStackProviderRegistry.getExclusionBounds()) {
+            if (b == null || b.getWidth() <= 0 || b.getHeight() <= 0) continue;
+            if (x < b.getX() + b.getWidth() && x + width > b.getX()
+                    && y < b.getY() + b.getHeight() && y + height > b.getY()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isLeftSideBlocked(AbstractContainerScreen<?> screen, ContainerScreenAccessor accessor) {
@@ -218,22 +258,12 @@ public class ZoomedItemRenderer {
         return false;
     }
 
-    private static void renderWithAlpha(GuiGraphics graphics, ItemStack stack,
+    private static void renderOffscreen(GuiGraphics graphics, ItemStack stack,
                                         float itemX, float itemY, int itemSize, float scale, float rotation,
-                                        boolean showInfo, float textX, float textY, boolean textBelowItem, float alpha) {
+                                        boolean showInfo, float textX, float textY, float alpha,
+                                        boolean useClipping, int clipX, int clipY, int clipWidth, int clipHeight) {
 
         Minecraft mc = Minecraft.getInstance();
-
-        if (alpha >= 0.999f) {
-            renderItemToBuffer(graphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
-
-            if (showInfo) {
-                float textAlpha = easeOutCubic(animationState.getTextProgress());
-                renderTextToBuffer(graphics, mc, stack, textX, textY, itemSize, textBelowItem, textAlpha);
-            }
-
-            return;
-        }
 
         int windowWidth = mc.getWindow().getWidth();
         int windowHeight = mc.getWindow().getHeight();
@@ -248,57 +278,43 @@ public class ZoomedItemRenderer {
         renderTarget.clear(Minecraft.ON_OSX);
         renderTarget.bindWrite(true);
 
-        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-        GuiGraphics fboGraphics = new GuiGraphics(mc, bufferSource);
+        GuiGraphics fboGraphics = new GuiGraphics(mc, zoomBufferSource());
 
-        renderItemToBuffer(fboGraphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
+        renderItemContent(fboGraphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
 
         if (showInfo) {
             float textAlpha = easeOutCubic(animationState.getTextProgress());
-            renderTextToBuffer(fboGraphics, mc, stack, textX, textY, itemSize, textBelowItem, textAlpha);
+            renderTextContent(fboGraphics, mc, stack, textX, textY, itemSize, true, textAlpha);
         }
 
         fboGraphics.flush();
 
         mainTarget.bindWrite(true);
 
-        blitWithAlpha(renderTarget, guiWidth, guiHeight, alpha);
+        if (useClipping) {
+            blitWithAlphaClipped(renderTarget, guiWidth, guiHeight, alpha, clipX, clipY, clipWidth, clipHeight);
+        } else {
+            blitWithAlpha(renderTarget, guiWidth, guiHeight, alpha);
+        }
     }
 
-    private static void renderWithAlphaClipped(GuiGraphics graphics, ItemStack stack,
-                                               float itemX, float itemY, int itemSize, float scale, float rotation,
-                                               boolean showInfo, float textX, float textY, boolean textBelowItem, float alpha,
-                                               int clipX, int clipY, int clipWidth, int clipHeight) {
-
-        Minecraft mc = Minecraft.getInstance();
-        int windowWidth = mc.getWindow().getWidth();
-        int windowHeight = mc.getWindow().getHeight();
-        int guiWidth = mc.getWindow().getGuiScaledWidth();
-        int guiHeight = mc.getWindow().getGuiScaledHeight();
-
-        ensureRenderTarget(windowWidth, windowHeight);
-        if (renderTarget == null) return;
-
-        RenderTarget mainTarget = mc.getMainRenderTarget();
-
-        renderTarget.clear(Minecraft.ON_OSX);
-        renderTarget.bindWrite(true);
-
-        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-        GuiGraphics fboGraphics = new GuiGraphics(mc, bufferSource);
-
-        renderItemToBuffer(fboGraphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
-
-        if (showInfo) {
-            float textAlpha = easeOutCubic(animationState.getTextProgress());
-            renderTextToBuffer(fboGraphics, mc, stack, textX, textY, itemSize, textBelowItem, textAlpha);
+    private static MultiBufferSource.BufferSource zoomBufferSource() {
+        if (zoomBufferSource == null) {
+            Map<RenderType, BufferBuilder> fixedBuffers = new LinkedHashMap<>();
+            for (RenderType type : new RenderType[]{
+                    RenderType.armorGlint(),
+                    RenderType.armorEntityGlint(),
+                    RenderType.glint(),
+                    RenderType.glintDirect(),
+                    RenderType.glintTranslucent(),
+                    RenderType.entityGlint(),
+                    RenderType.entityGlintDirect()
+            }) {
+                fixedBuffers.put(type, new BufferBuilder(type.bufferSize()));
+            }
+            zoomBufferSource = MultiBufferSource.immediateWithBuffers(fixedBuffers, new BufferBuilder(786432));
         }
-
-        fboGraphics.flush();
-
-        mainTarget.bindWrite(true);
-
-        blitWithAlphaClipped(renderTarget, guiWidth, guiHeight, alpha, clipX, clipY, clipWidth, clipHeight);
+        return zoomBufferSource;
     }
 
     private static void ensureRenderTarget(int windowWidth, int windowHeight) {
@@ -326,8 +342,8 @@ public class ZoomedItemRenderer {
         cachedHeight = 0;
     }
 
-    private static void renderItemToBuffer(GuiGraphics graphics, Minecraft mc, ItemStack stack,
-                                           float x, float y, int size, float scale, float rotation) {
+    private static void renderItemContent(GuiGraphics graphics, Minecraft mc, ItemStack stack,
+                                          float x, float y, int size, float scale, float rotation) {
 
         PoseStack pose = graphics.pose();
         pose.pushPose();
@@ -369,8 +385,8 @@ public class ZoomedItemRenderer {
         graphics.drawString(font, text, (int) textX, (int) textY, 0xFFFFFF, true);
     }
 
-    private static void renderTextToBuffer(GuiGraphics graphics, Minecraft mc, ItemStack stack,
-                                           float x, float y, int itemSize, boolean centerHorizontally, float alpha) {
+    private static void renderTextContent(GuiGraphics graphics, Minecraft mc, ItemStack stack,
+                                          float x, float y, int itemSize, boolean centerHorizontally, float alpha) {
 
         Font font = mc.font;
         List<Component> tooltip = stack.getTooltipLines(mc.player, TooltipFlag.Default.NORMAL);
@@ -562,6 +578,7 @@ public class ZoomedItemRenderer {
 
     public static void cleanup() {
         destroyRenderTarget();
+        zoomBufferSource = null;
         animationState.reset();
         initialized = false;
     }

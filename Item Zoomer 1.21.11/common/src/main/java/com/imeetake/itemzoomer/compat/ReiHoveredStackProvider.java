@@ -4,6 +4,8 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 public class ReiHoveredStackProvider implements HoveredStackProvider {
 
     @Override
@@ -23,6 +25,15 @@ public class ReiHoveredStackProvider implements HoveredStackProvider {
             return ReiHoveredStackHelper.getWindowBounds();
         } catch (Throwable e) {
             return null;
+        }
+    }
+
+    @Override
+    public List<Rect2i> getExclusionBounds() {
+        try {
+            return ReiHoveredStackHelper.getExclusionBounds();
+        } catch (Throwable e) {
+            return List.of();
         }
     }
 

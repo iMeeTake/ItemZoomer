@@ -28,6 +28,13 @@
     "text.autoconfig.itemzoomer.option.infoDelaySeconds": "Задержка информации (сек)",
     "text.autoconfig.itemzoomer.option.infoDelaySeconds.@Tooltip": "Задержка перед показом информации",
 
+    "text.autoconfig.itemzoomer.option.favoritesOverlap": "Слой относительно списка",
+    "text.autoconfig.itemzoomer.option.favoritesOverlap.@Tooltip": "Как ведёт себя зум поверх списка предметов/избранного просмотрщика рецептов (JEI/REI): рисовать поверх, рисовать под, или скрывать зум при перекрытии списка. Подсказки всегда остаются сверху.",
+
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.above": "Поверх списка",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.below": "Под списком",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.hide": "Скрывать при перекрытии списка",
+
     "text.autoconfig.itemzoomer.enum.appearanimation.none": "Нет",
     "text.autoconfig.itemzoomer.enum.appearanimation.fade": "Затухание",
     "text.autoconfig.itemzoomer.enum.appearanimation.scale": "Масштаб",

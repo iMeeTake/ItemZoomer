@@ -83,6 +83,38 @@ public class HoveredStackProviderRegistry {
         return null;
     }
 
+    public static List<Rect2i> getExclusionBounds() {
+        if (!initialized) {
+            init();
+        }
+        List<Rect2i> bounds = new ArrayList<>();
+        for (HoveredStackProvider provider : providers) {
+            try {
+                List<Rect2i> providerBounds = provider.getExclusionBounds();
+                if (providerBounds != null) {
+                    bounds.addAll(providerBounds);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return bounds;
+    }
+
+    public static boolean shouldDeferAbove() {
+        if (!initialized) {
+            init();
+        }
+        for (HoveredStackProvider provider : providers) {
+            try {
+                if (provider.shouldDeferAbove()) {
+                    return true;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return false;
+    }
+
     public static boolean hasProviders() {
         if (!initialized) {
             init();

@@ -45,6 +45,9 @@ public class ItemZoomerConfig implements ConfigData {
     @ConfigEntry.BoundedDiscrete(min = 0, max = 10)
     public int infoDelaySeconds = 2;
 
+    @ConfigEntry.Gui.Tooltip
+    public FavoritesOverlap favoritesOverlap = FavoritesOverlap.HIDE;
+
     public void toggleEnabled() {
         this.enabled = !this.enabled;
         AutoConfig.getConfigHolder(ItemZoomerConfig.class).save();
@@ -62,6 +65,10 @@ public class ItemZoomerConfig implements ConfigData {
 
         if (idleAnimation == null) {
             idleAnimation = IdleAnimation.NONE;
+        }
+
+        if (favoritesOverlap == null) {
+            favoritesOverlap = FavoritesOverlap.HIDE;
         }
     }
 
@@ -83,5 +90,11 @@ public class ItemZoomerConfig implements ConfigData {
         NONE,
         SWING,
         PULSE
+    }
+
+    public enum FavoritesOverlap {
+        ABOVE,
+        BELOW,
+        HIDE
     }
 }

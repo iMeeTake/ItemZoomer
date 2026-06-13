@@ -29,5 +29,7 @@ dependencies {
     modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
     modApi "me.shedaniel.cloth:cloth-config-fabric:$rootProject.cloth_config_version"
     modCompileOnly "mezz.jei:jei-1.21.11-common-api:$rootProject.jei_version"
+    compileOnly "mezz.jei:jei-1.21.11-gui:$rootProject.jei_version"
     modCompileOnly "me.shedaniel:RoughlyEnoughItems-api:$rootProject.rei_version"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:$rootProject.rei_version"
 }

@@ -28,6 +28,13 @@
     "text.autoconfig.itemzoomer.option.infoDelaySeconds": "Info Delay (seconds)",
     "text.autoconfig.itemzoomer.option.infoDelaySeconds.@Tooltip": "Delay before showing item info",
 
+    "text.autoconfig.itemzoomer.option.favoritesOverlap": "Favorites List Layer",
+    "text.autoconfig.itemzoomer.option.favoritesOverlap.@Tooltip": "How the zoom behaves over a recipe viewer's item/favorites list (JEI/EMI/REI): draw above it, draw below it, or hide the zoom when it would overlap the list. Tooltips always stay on top.",
+
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.above": "Above list",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.below": "Below list",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.hide": "Hide if it overlaps the list",
+
     "text.autoconfig.itemzoomer.enum.appearanimation.none": "None",
     "text.autoconfig.itemzoomer.enum.appearanimation.fade": "Fade",
     "text.autoconfig.itemzoomer.enum.appearanimation.scale": "Scale",

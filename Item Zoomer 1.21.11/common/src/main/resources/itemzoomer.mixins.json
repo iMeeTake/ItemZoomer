@@ -8,7 +8,9 @@
         "AbstractRecipeBookScreenMixin",
         "GuiGraphicsAccessor",
         "GuiRenderStateAccessor",
-        "PictureInPictureRendererAccessor"
+        "PictureInPictureRendererAccessor",
+        "JeiBookmarkOverlayMixin",
+        "ReiScreenOverlayMixin"
     ],
     "mixins": [
     ],
