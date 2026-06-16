@@ -1,0 +1,35 @@
+architectury {
+    common rootProject.enabled_platforms.split(',')
+}
+
+repositories {
+    maven { url "https://maven.terraformersmc.com/releases/" }
+    maven { url "https://maven.shedaniel.me/" }
+    flatDir {
+        dirs "${rootProject.projectDir}/libs"
+    }
+    maven {
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/"
+    }
+    maven {
+        name = "ModMaven"
+        url = "https://modmaven.dev"
+    }
+}
+
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    implementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    // Architectury API. This is optional, and you can comment it out if you don't need it.
+
+    implementation "dev.architectury:architectury:$rootProject.architectury_api_version"
+    api "me.shedaniel.cloth:cloth-config-fabric:$rootProject.cloth_config_version"
+    compileOnly "mezz.jei:jei-26.1.2-common-api:$rootProject.jei_version"
+    compileOnly "mezz.jei:jei-26.1.2-gui:$rootProject.jei_version"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-api:$rootProject.rei_version"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:$rootProject.rei_version"
+}

@@ -53,8 +53,12 @@ public class ZoomedItemPIPRenderer extends PictureInPictureRenderer<ZoomedItemRe
         SubmitNodeCollector submitNodeCollector = Minecraft.getInstance().gameRenderer.getSubmitNodeStorage();
         FeatureRenderDispatcher featureRenderDispatcher = Minecraft.getInstance().gameRenderer.getFeatureRenderDispatcher();
 
-        itemState.submit(poseStack, submitNodeCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
-        featureRenderDispatcher.renderAllFeatures();
+        try {
+            itemState.submit(poseStack, submitNodeCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
+            featureRenderDispatcher.renderAllFeatures();
+        } catch (Throwable t) {
+            ZoomedItemRenderer.logCurrentRenderFailure(t);
+        }
     }
 
     @Override

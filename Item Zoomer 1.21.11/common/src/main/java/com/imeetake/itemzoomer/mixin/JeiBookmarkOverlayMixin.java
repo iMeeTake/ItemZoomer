@@ -13,7 +13,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "mezz.jei.gui.overlay.bookmarks.BookmarkOverlay", remap = false)
 public class JeiBookmarkOverlayMixin {
 
-    @Inject(method = "drawScreen", at = @At("TAIL"))
+    @Inject(method = "drawScreen", at = @At("HEAD"), require = 0)
+    private void itemzoomer$renderZoomBelow(Minecraft minecraft, GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        if (ItemZoomerConfig.get().favoritesOverlap != ItemZoomerConfig.FavoritesOverlap.BELOW) {
+            return;
+        }
+        Screen screen = minecraft.screen;
+        if (screen != null) {
+            ZoomedItemRenderer.renderFromViewer(guiGraphics, screen, mouseX, mouseY);
+        }
+    }
+
+    @Inject(method = "drawScreen", at = @At("TAIL"), require = 0)
     private void itemzoomer$renderZoomAbove(Minecraft minecraft, GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         if (ItemZoomerConfig.get().favoritesOverlap != ItemZoomerConfig.FavoritesOverlap.ABOVE) {
             return;

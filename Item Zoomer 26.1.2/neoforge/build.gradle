@@ -1,0 +1,81 @@
+plugins {
+    id 'com.gradleup.shadow'
+}
+
+architectury {
+    platformSetupLoomIde()
+    neoForge()
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentNeoForge.extendsFrom common
+
+    // Files in this configuration will be bundled into your mod using the Shadow plugin.
+    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
+
+repositories {
+    maven {
+        name = 'NeoForged'
+        url = 'https://maven.neoforged.net/releases'
+    }
+    maven { url "https://maven.terraformersmc.com/releases/" }
+    maven { url "https://maven.shedaniel.me/" }
+    flatDir {
+        dirs "${rootProject.projectDir}/libs"
+    }
+    maven {
+        name = "Jared's maven"
+        url = "https://maven.blamejared.com/"
+    }
+    maven {
+        name = "ModMaven"
+        url = "https://modmaven.dev"
+    }
+}
+
+dependencies {
+    neoForge "net.neoforged:neoforge:$rootProject.neoforge_version"
+
+    // Architectury API. This is optional, and you can comment it out if you don't need it.
+    implementation "dev.architectury:architectury-neoforge:$rootProject.architectury_api_version"
+    api "me.shedaniel.cloth:cloth-config-neoforge:$rootProject.cloth_config_version"
+    compileOnly "mezz.jei:jei-26.1.2-neoforge-api:$rootProject.jei_version"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:$rootProject.rei_version"
+    common(project(path: ':common')) { transitive = false }
+    shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
+}
+
+processResources {
+    inputs.property 'version', project.version
+
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand version: inputs.properties.version
+    }
+}
+
+jar {
+    archiveClassifier = 'raw'
+}
+
+shadowJar {
+    dependsOn(jar)
+    mainSpec.sourcePaths.clear()
+    from(zipTree(jar.archiveFile))
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = null
+}
+
+tasks.named('assemble') {
+    dependsOn 'shadowJar'
+}

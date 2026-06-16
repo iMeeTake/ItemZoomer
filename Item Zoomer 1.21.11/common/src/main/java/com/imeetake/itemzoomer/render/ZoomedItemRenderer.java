@@ -7,6 +7,7 @@ import com.imeetake.itemzoomer.compat.HoveredStackProviderRegistry;
 import com.imeetake.itemzoomer.config.ItemZoomerConfig;
 import com.imeetake.itemzoomer.mixin.GuiGraphicsAccessor;
 import com.imeetake.itemzoomer.mixin.GuiRenderStateAccessor;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,6 +18,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.item.TrackingItemStackRenderState;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.FormattedCharSequence;
@@ -27,8 +29,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.phys.AABB;
+import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ZoomedItemRenderer {
 
@@ -38,7 +43,10 @@ public class ZoomedItemRenderer {
     private static final float MAX_IDLE_SCALE = 1.02f;
     private static final ModelFootprint NORMAL_MODEL_FOOTPRINT = new ModelFootprint(-0.5f, -0.5f, 0.5f, 0.5f);
     private static final AnimationState animationState = new AnimationState();
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Set<String> LOGGED_RENDER_FAILURES = ConcurrentHashMap.newKeySet();
     private static boolean renderedThisFrame = false;
+    private static Item currentZoomItem = null;
 
     public static void beginFrame() {
         animationState.beginFrame();
@@ -75,6 +83,14 @@ public class ZoomedItemRenderer {
     }
 
     private static void doRender(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
+        try {
+            doRender0(graphics, screen, mouseX, mouseY);
+        } catch (Throwable t) {
+            logCurrentRenderFailure(t);
+        }
+    }
+
+    private static void doRender0(GuiGraphics graphics, Screen screen, int mouseX, int mouseY) {
         if (!ItemZoomer.isEnabled()) {
             animationState.reset();
             return;
@@ -84,6 +100,7 @@ public class ZoomedItemRenderer {
             return;
         }
         renderedThisFrame = true;
+        currentZoomItem = null;
 
         ItemZoomerConfig config = ItemZoomerConfig.get();
         ContainerScreenAccessor accessor = screen instanceof ContainerScreenAccessor currentAccessor ? currentAccessor : null;
@@ -128,6 +145,7 @@ public class ZoomedItemRenderer {
         if (stack == null || stack.isEmpty()) {
             return;
         }
+        currentZoomItem = stack.getItem();
 
         if (itemRenderState == null) {
             itemRenderState = new TrackingItemStackRenderState();
@@ -498,6 +516,17 @@ public class ZoomedItemRenderer {
                     Math.max(maxX, other.maxX),
                     Math.max(maxY, other.maxY)
             );
+        }
+    }
+
+    static void logCurrentRenderFailure(Throwable t) {
+        logRenderFailure(currentZoomItem, t);
+    }
+
+    static void logRenderFailure(Item item, Throwable t) {
+        String id = item != null ? BuiltInRegistries.ITEM.getKey(item).toString() : "unknown item";
+        if (LOGGED_RENDER_FAILURES.add(id)) {
+            LOGGER.warn("Item Zoomer: skipping the zoom overlay for {} because it threw while rendering (most likely a bug in that item's own mod, not Item Zoomer). Further failures for this item are silenced.", id, t);
         }
     }
 

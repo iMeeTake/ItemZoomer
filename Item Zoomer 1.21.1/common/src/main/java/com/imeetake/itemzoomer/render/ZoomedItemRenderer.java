@@ -9,6 +9,7 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,9 +19,8 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.inventory.Slot;
@@ -30,10 +30,11 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
+import org.slf4j.Logger;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.SequencedMap;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ZoomedItemRenderer {
 
@@ -41,14 +42,13 @@ public class ZoomedItemRenderer {
     private static final int BASE_SIZE = 115;
     private static final float BACKING_SCREEN_SIZE_SCALE = 0.95f;
     private static final AnimationState animationState = new AnimationState();
+    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Set<String> LOGGED_RENDER_FAILURES = ConcurrentHashMap.newKeySet();
 
     private static RenderTarget renderTarget = null;
     private static int cachedWidth = 0;
     private static int cachedHeight = 0;
     private static boolean initialized = false;
-    private static MultiBufferSource.BufferSource zoomBufferSource = null;
-    private static ByteBufferBuilder zoomBufferBuilder = null;
-    private static List<ByteBufferBuilder> zoomFixedBuffers = List.of();
     private static boolean renderedThisFrame = false;
 
     public static void beginFrame() {
@@ -141,14 +141,18 @@ public class ZoomedItemRenderer {
 
         graphics.flush();
 
-        if (accessor != null) {
-            float sizeScale = fromBackingScreen ? BACKING_SCREEN_SIZE_SCALE : 1.0f;
-            renderZoomedItem(graphics, accessor, stack, config, sizeScale);
-        } else if (windowBounds != null) {
-            renderZoomedItem(graphics, windowBounds.getX(), windowBounds.getY(), windowBounds.getHeight(), stack, config, 1.0f);
-        } else {
-            int fallbackLeft = Math.min(screen.width / 2, 2 * PADDING + BASE_SIZE);
-            renderZoomedItem(graphics, fallbackLeft, 0, screen.height, stack, config, 1.0f);
+        try {
+            if (accessor != null) {
+                float sizeScale = fromBackingScreen ? BACKING_SCREEN_SIZE_SCALE : 1.0f;
+                renderZoomedItem(graphics, accessor, stack, config, sizeScale);
+            } else if (windowBounds != null) {
+                renderZoomedItem(graphics, windowBounds.getX(), windowBounds.getY(), windowBounds.getHeight(), stack, config, 1.0f);
+            } else {
+                int fallbackLeft = Math.min(screen.width / 2, 2 * PADDING + BASE_SIZE);
+                renderZoomedItem(graphics, fallbackLeft, 0, screen.height, stack, config, 1.0f);
+            }
+        } catch (Throwable t) {
+            logRenderFailure(stack.getItem(), t);
         }
     }
 
@@ -282,43 +286,26 @@ public class ZoomedItemRenderer {
         renderTarget.clear(Minecraft.ON_OSX);
         renderTarget.bindWrite(true);
 
-        GuiGraphics fboGraphics = new GuiGraphics(mc, zoomBufferSource());
+        try {
+            GuiGraphics fboGraphics = new GuiGraphics(mc, mc.renderBuffers().bufferSource());
 
-        renderItemContent(fboGraphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
+            renderItemContent(fboGraphics, mc, stack, itemX, itemY, itemSize, scale, rotation);
 
-        if (showInfo) {
-            float textAlpha = easeOutCubic(animationState.getTextProgress());
-            renderTextContent(fboGraphics, mc, stack, textX, textY, itemSize, true, textAlpha);
+            if (showInfo) {
+                float textAlpha = easeOutCubic(animationState.getTextProgress());
+                renderTextContent(fboGraphics, mc, stack, textX, textY, itemSize, true, textAlpha);
+            }
+
+            fboGraphics.flush();
+        } finally {
+            mainTarget.bindWrite(true);
         }
-
-        fboGraphics.flush();
-
-        mainTarget.bindWrite(true);
 
         if (useClipping) {
             blitWithAlphaClipped(renderTarget, guiWidth, guiHeight, alpha, clipX, clipY, clipWidth, clipHeight);
         } else {
             blitWithAlpha(renderTarget, guiWidth, guiHeight, alpha);
         }
-    }
-
-    private static MultiBufferSource.BufferSource zoomBufferSource() {
-        if (zoomBufferSource == null) {
-            SequencedMap<RenderType, ByteBufferBuilder> fixedBuffers = new LinkedHashMap<>();
-            for (RenderType type : new RenderType[]{
-                    RenderType.armorEntityGlint(),
-                    RenderType.glint(),
-                    RenderType.glintTranslucent(),
-                    RenderType.entityGlint(),
-                    RenderType.entityGlintDirect()
-            }) {
-                fixedBuffers.put(type, new ByteBufferBuilder(type.bufferSize()));
-            }
-            zoomFixedBuffers = List.copyOf(fixedBuffers.values());
-            zoomBufferBuilder = new ByteBufferBuilder(786432);
-            zoomBufferSource = MultiBufferSource.immediateWithBuffers(fixedBuffers, zoomBufferBuilder);
-        }
-        return zoomBufferSource;
     }
 
     private static void ensureRenderTarget(int windowWidth, int windowHeight) {
@@ -581,17 +568,15 @@ public class ZoomedItemRenderer {
         return Math.max(min, Math.min(max, value));
     }
 
+    static void logRenderFailure(Item item, Throwable t) {
+        String id = item != null ? BuiltInRegistries.ITEM.getKey(item).toString() : "unknown item";
+        if (LOGGED_RENDER_FAILURES.add(id)) {
+            LOGGER.warn("Item Zoomer: skipping the zoom overlay for {} because it threw while rendering (most likely a bug in that item's own mod, not Item Zoomer). Further failures for this item are silenced.", id, t);
+        }
+    }
+
     public static void cleanup() {
         destroyRenderTarget();
-        if (zoomBufferBuilder != null) {
-            zoomBufferBuilder.close();
-            zoomBufferBuilder = null;
-        }
-        for (ByteBufferBuilder buffer : zoomFixedBuffers) {
-            buffer.close();
-        }
-        zoomFixedBuffers = List.of();
-        zoomBufferSource = null;
         animationState.reset();
         initialized = false;
     }

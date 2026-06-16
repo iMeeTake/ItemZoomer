@@ -1,0 +1,55 @@
+{
+    "key.category.itemzoomer.category": "Item Zoomer",
+    "key.itemzoomer.toggle_zoom": "Вкл/Выкл Item Zoomer",
+
+    "text.autoconfig.itemzoomer.title": "Настройки Item Zoomer",
+
+    "text.autoconfig.itemzoomer.option.enabled": "Включён",
+    "text.autoconfig.itemzoomer.option.enabled.@Tooltip": "Включить или выключить мод",
+
+    "text.autoconfig.itemzoomer.option.itemSizePercent": "Размер предмета (%)",
+    "text.autoconfig.itemzoomer.option.itemSizePercent.@Tooltip": "Множитель размера превью предмета (50-150%)",
+
+    "text.autoconfig.itemzoomer.option.displayPosition": "Позиция отображения",
+    "text.autoconfig.itemzoomer.option.displayPosition.@Tooltip": "Где отображать увеличенный предмет",
+
+    "text.autoconfig.itemzoomer.option.appearAnimation": "Анимация появления",
+    "text.autoconfig.itemzoomer.option.appearAnimation.@Tooltip": "Анимация при появлении предмета",
+
+    "text.autoconfig.itemzoomer.option.appearDelayMs": "Задержка (мс)",
+    "text.autoconfig.itemzoomer.option.appearDelayMs.@Tooltip": "Задержка между моментом наведения курсором на предмет и началом анимации",
+
+    "text.autoconfig.itemzoomer.option.idleAnimation": "Анимация ожидания",
+    "text.autoconfig.itemzoomer.option.idleAnimation.@Tooltip": "Анимация пока курсор на предмете",
+
+    "text.autoconfig.itemzoomer.option.showItemInfo": "Показывать информацию",
+    "text.autoconfig.itemzoomer.option.showItemInfo.@Tooltip": "Показывать название, описание и зачарования",
+
+    "text.autoconfig.itemzoomer.option.infoDelaySeconds": "Задержка информации (сек)",
+    "text.autoconfig.itemzoomer.option.infoDelaySeconds.@Tooltip": "Задержка перед показом информации",
+
+    "text.autoconfig.itemzoomer.option.favoritesOverlap": "Слой относительно списка",
+    "text.autoconfig.itemzoomer.option.favoritesOverlap.@Tooltip": "Как ведёт себя зум поверх списка предметов/избранного просмотрщика рецептов (JEI/REI): рисовать поверх, рисовать под, или скрывать зум при перекрытии списка. Подсказки всегда остаются сверху.",
+
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.above": "Поверх списка",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.below": "Под списком",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.hide": "Скрывать при перекрытии списка",
+
+    "text.autoconfig.itemzoomer.enum.appearanimation.none": "Нет",
+    "text.autoconfig.itemzoomer.enum.appearanimation.fade": "Затухание",
+    "text.autoconfig.itemzoomer.enum.appearanimation.scale": "Масштаб",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_left": "Выезд слева",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_right": "Выезд справа",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_top": "Выезд сверху",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_bottom": "Выезд снизу",
+
+    "text.autoconfig.itemzoomer.enum.idleanimation.none": "Нет",
+    "text.autoconfig.itemzoomer.enum.idleanimation.swing": "Покачивание",
+    "text.autoconfig.itemzoomer.enum.idleanimation.pulse": "Пульсация",
+
+    "text.autoconfig.itemzoomer.enum.displayposition.left": "Слева",
+    "text.autoconfig.itemzoomer.enum.displayposition.top_auto": "Сверху (авто)",
+    "text.autoconfig.itemzoomer.enum.displayposition.top_always": "Сверху (всегда)",
+
+    "modmenu.descriptionTranslation.itemzoomer": "Увеличение предметов при наведении в инвентаре."
+}

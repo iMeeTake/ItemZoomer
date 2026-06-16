@@ -51,7 +51,7 @@ public class AnimationState {
             currentStack = liveStack.copy();
             lastPresentTime = now;
             hasTimeline = true;
-        } else if (hasTimeline && (now - lastPresentTime) > GRACE_SECONDS) {
+        } else if (hasTimeline && (!hasAppearAnimation || (now - lastPresentTime) > GRACE_SECONDS)) {
             hasTimeline = false;
         }
 
@@ -64,7 +64,9 @@ public class AnimationState {
             textTarget = elapsed >= textDelaySeconds ? 1f : 0f;
         }
 
-        appearProgress = approach(appearProgress, appearTarget, dt / APPEAR_DURATION);
+        appearProgress = hasAppearAnimation
+                ? approach(appearProgress, appearTarget, dt / APPEAR_DURATION)
+                : appearTarget;
         textProgress = approach(textProgress, textTarget, dt / TEXT_FADE_DURATION);
 
         if (!hasTimeline && appearProgress <= 0f) {

@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = EmiScreenManager.class, remap = false)
 public class EmiScreenManagerMixin {
 
-    @Inject(method = "render(Ldev/emi/emi/runtime/EmiDrawContext;IIF)V", at = @At("HEAD"), remap = false)
+    @Inject(method = "render(Ldev/emi/emi/runtime/EmiDrawContext;IIF)V", at = @At("HEAD"), remap = false, require = 0)
     private static void itemzoomer$renderZoomBelow(EmiDrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (ItemZoomerConfig.get().favoritesOverlap != ItemZoomerConfig.FavoritesOverlap.BELOW) {
             return;

@@ -13,14 +13,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "me.shedaniel.rei.impl.client.gui.ScreenOverlayImpl", remap = false)
 public class ReiScreenOverlayMixin {
 
-    @Inject(method = "renderWidgets", at = @At("HEAD"))
+    @Inject(method = "renderWidgets", at = @At("HEAD"), require = 0)
     private void itemzoomer$renderZoomBelow(GuiGraphics graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (ItemZoomerConfig.get().favoritesOverlap == ItemZoomerConfig.FavoritesOverlap.BELOW) {
             itemzoomer$renderZoom(graphics, mouseX, mouseY);
         }
     }
 
-    @Inject(method = "renderWidgets", at = @At("TAIL"))
+    @Inject(method = "renderWidgets", at = @At("TAIL"), require = 0)
     private void itemzoomer$renderZoomAbove(GuiGraphics graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         ItemZoomerConfig.FavoritesOverlap mode = ItemZoomerConfig.get().favoritesOverlap;
         if (mode == ItemZoomerConfig.FavoritesOverlap.ABOVE || mode == ItemZoomerConfig.FavoritesOverlap.HIDE) {
