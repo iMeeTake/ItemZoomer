@@ -1,0 +1,11 @@
+{
+    "required": true,
+    "package": "com.imeetake.itemzoomer.fabric.mixin",
+    "compatibilityLevel": "JAVA_25",
+    "client": [
+        "GuiRendererMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

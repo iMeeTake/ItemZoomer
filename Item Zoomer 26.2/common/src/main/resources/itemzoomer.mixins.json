@@ -1,0 +1,20 @@
+{
+    "required": true,
+    "package": "com.imeetake.itemzoomer.mixin",
+    "compatibilityLevel": "JAVA_25",
+    "minVersion": "0.8",
+    "client": [
+        "AbstractContainerScreenMixin",
+        "AbstractRecipeBookScreenMixin",
+        "GuiGraphicsAccessor",
+        "PictureInPictureRendererAccessor",
+        "PictureInPictureRendererMixin",
+        "JeiBookmarkOverlayMixin",
+        "ReiScreenOverlayMixin"
+    ],
+    "mixins": [
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
