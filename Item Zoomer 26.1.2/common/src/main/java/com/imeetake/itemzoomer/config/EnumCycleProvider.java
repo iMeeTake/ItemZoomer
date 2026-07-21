@@ -32,8 +32,7 @@ public class EnumCycleProvider implements GuiProvider {
             selectorBuilder.setSaveConsumer(newValue -> {
                 try {
                     field.set(config, newValue);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                } catch (IllegalAccessException ignored) {
                 }
             });
 
@@ -45,8 +44,7 @@ public class EnumCycleProvider implements GuiProvider {
 
             return Collections.singletonList(selectorBuilder.build());
 
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+        } catch (IllegalAccessException ignored) {
             return Collections.emptyList();
         }
     }

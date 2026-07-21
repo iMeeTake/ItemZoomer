@@ -47,8 +47,5 @@
                 "modmenu.discord": "https://discord.gg/ZBzupfYZ6K"
             }
         }
-    },
-    "suggests": {
-        "another-mod": "*"
     }
 }

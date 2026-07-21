@@ -10,7 +10,8 @@
         "PictureInPictureRendererAccessor",
         "PictureInPictureRendererMixin",
         "JeiBookmarkOverlayMixin",
-        "ReiScreenOverlayMixin"
+        "ReiScreenOverlayMixin",
+        "ScreenMixin"
     ],
     "mixins": [
     ],

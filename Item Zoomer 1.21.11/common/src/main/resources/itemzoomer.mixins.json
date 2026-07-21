@@ -10,7 +10,8 @@
         "GuiRenderStateAccessor",
         "PictureInPictureRendererAccessor",
         "JeiBookmarkOverlayMixin",
-        "ReiScreenOverlayMixin"
+        "ReiScreenOverlayMixin",
+        "ScreenMixin"
     ],
     "mixins": [
     ],

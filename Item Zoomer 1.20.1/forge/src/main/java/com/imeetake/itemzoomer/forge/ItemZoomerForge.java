@@ -17,7 +17,6 @@ import com.imeetake.itemzoomer.ItemZoomer;
 @Mod(ItemZoomer.MOD_ID)
 public final class ItemZoomerForge {
     public ItemZoomerForge() {
-        // Submit our event bus to let Architectury API register our content on the right time.
         EventBuses.registerModEventBus(ItemZoomer.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
 
         if (FMLEnvironment.dist == Dist.CLIENT) {

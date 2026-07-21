@@ -1,11 +1,17 @@
 package com.imeetake.itemzoomer.mixin;
 
 import com.imeetake.itemzoomer.accessor.ContainerScreenAccessor;
+import com.imeetake.itemzoomer.render.ZoomedItemRenderer;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenMixin implements ContainerScreenAccessor {
@@ -49,5 +55,10 @@ public abstract class AbstractContainerScreenMixin implements ContainerScreenAcc
     @Override
     public int itemzoomer$getImageHeight() {
         return this.imageHeight;
+    }
+
+    @Inject(method = "render", at = @At("TAIL"))
+    private void itemzoomer$renderZoomBelowTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+        ZoomedItemRenderer.render(guiGraphics, (Screen) (Object) this, mouseX, mouseY);
     }
 }

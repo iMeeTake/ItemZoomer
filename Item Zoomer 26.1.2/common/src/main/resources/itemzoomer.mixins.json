@@ -9,7 +9,8 @@
         "GuiGraphicsAccessor",
         "PictureInPictureRendererAccessor",
         "JeiBookmarkOverlayMixin",
-        "ReiScreenOverlayMixin"
+        "ReiScreenOverlayMixin",
+        "ScreenMixin"
     ],
     "mixins": [
     ],

@@ -7,7 +7,8 @@
       "AbstractContainerScreenMixin",
       "EmiScreenManagerMixin",
       "JeiBookmarkOverlayMixin",
-      "ReiScreenOverlayMixin"
+      "ReiScreenOverlayMixin",
+      "ScreenMixin"
   ],
   "mixins": [
   ],
