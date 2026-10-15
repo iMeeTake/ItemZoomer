@@ -9,6 +9,7 @@
 
     "text.autoconfig.itemzoomer.option.itemSizePercent": "Item Size (%)",
     "text.autoconfig.itemzoomer.option.itemSizePercent.@Tooltip": "Size multiplier for the item preview (50-150%)",
+    "text.autoconfig.itemzoomer.option.itemSizePercent.value": "%s%%",
 
     "text.autoconfig.itemzoomer.option.displayPosition": "Display Position",
     "text.autoconfig.itemzoomer.option.displayPosition.@Tooltip": "Where to display the zoomed item preview",
@@ -18,6 +19,7 @@
 
     "text.autoconfig.itemzoomer.option.appearDelayMs": "Delay (ms)",
     "text.autoconfig.itemzoomer.option.appearDelayMs.@Tooltip": "Delay between hovering over an item and starting the animation",
+    "text.autoconfig.itemzoomer.option.appearDelayMs.value": "%s ms",
 
     "text.autoconfig.itemzoomer.option.idleAnimation": "Idle Animation",
     "text.autoconfig.itemzoomer.option.idleAnimation.@Tooltip": "Animation while hovering over item",
@@ -27,6 +29,7 @@
 
     "text.autoconfig.itemzoomer.option.infoDelaySeconds": "Info Delay (seconds)",
     "text.autoconfig.itemzoomer.option.infoDelaySeconds.@Tooltip": "Delay before showing item info",
+    "text.autoconfig.itemzoomer.option.infoDelaySeconds.value": "%s s",
 
     "text.autoconfig.itemzoomer.option.favoritesOverlap": "Favorites List Layer",
     "text.autoconfig.itemzoomer.option.favoritesOverlap.@Tooltip": "How the zoom behaves over a recipe viewer's item/favorites list (JEI/REI): draw above it, draw below it, or hide the zoom when it would overlap the list. Tooltips always stay on top.",

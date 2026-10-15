@@ -2,9 +2,11 @@ package com.imeetake.itemzoomer.fabric.client;
 
 import com.imeetake.itemzoomer.ItemZoomer;
 import com.imeetake.itemzoomer.config.EnumCycleProvider;
+import com.imeetake.itemzoomer.config.SliderValueTextTransformer;
 import com.imeetake.itemzoomer.config.ItemZoomerConfig;
 import com.imeetake.itemzoomer.render.ZoomedItemRenderer;
 import com.mojang.blaze3d.platform.InputConstants;
+import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.gui.registry.GuiRegistry;
 import net.fabricmc.api.ClientModInitializer;
@@ -77,5 +79,6 @@ public class ItemZoomerFabricClient implements ClientModInitializer {
     private static void registerConfigGui() {
         GuiRegistry registry = AutoConfig.getGuiRegistry(ItemZoomerConfig.class);
         registry.registerPredicateProvider(new EnumCycleProvider(), field -> field.getType().isEnum());
+        registry.registerAnnotationTransformer(new SliderValueTextTransformer(), ConfigEntry.BoundedDiscrete.class);
     }
 }

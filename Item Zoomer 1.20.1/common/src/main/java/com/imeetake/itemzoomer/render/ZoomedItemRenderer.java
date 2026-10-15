@@ -3,6 +3,7 @@ package com.imeetake.itemzoomer.render;
 import com.imeetake.itemzoomer.ItemZoomer;
 import com.imeetake.itemzoomer.accessor.ContainerScreenAccessor;
 import com.imeetake.itemzoomer.compat.HoveredStackProviderRegistry;
+import com.imeetake.itemzoomer.compat.TooltipStackCapture;
 import com.imeetake.itemzoomer.config.ItemZoomerConfig;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -52,6 +53,7 @@ public class ZoomedItemRenderer {
 
     public static void beginFrame() {
         animationState.beginFrame();
+        TooltipStackCapture.beginFrame();
         renderedThisFrame = false;
     }
 
@@ -101,6 +103,13 @@ public class ZoomedItemRenderer {
             ItemStack compatStack = HoveredStackProviderRegistry.getHoveredStack(mouseX, mouseY);
             if (compatStack != null && !compatStack.isEmpty()) {
                 liveStack = compatStack;
+            }
+        }
+
+        if ((liveStack == null || liveStack.isEmpty()) && accessor != null) {
+            ItemStack tooltipStack = TooltipStackCapture.previousFrameStack();
+            if (tooltipStack != null && !tooltipStack.isEmpty()) {
+                liveStack = tooltipStack;
             }
         }
 
@@ -577,10 +586,12 @@ public class ZoomedItemRenderer {
         destroyRenderTarget();
         animationState.reset();
         initialized = false;
+        TooltipStackCapture.clear();
     }
 
     public static void onScreenClose() {
         animationState.reset();
+        TooltipStackCapture.clear();
     }
 
     public static boolean isInitialized() {

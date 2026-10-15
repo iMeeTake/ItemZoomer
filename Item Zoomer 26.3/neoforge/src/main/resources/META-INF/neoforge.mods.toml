@@ -1,0 +1,57 @@
+modLoader = "javafml"
+license = "MIT"
+
+[[mods]]
+modId = "itemzoomer"
+version = "${version}"
+displayName = "Item Zoomer"
+authors = "iMeeTake"
+description = '''
+Zoom in on hovered items in the inventory.
+'''
+iconFile = "itemzoomer.png"
+
+[[dependencies.itemzoomer]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.3,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.itemzoomer]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.3]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.itemzoomer]]
+modId = "architectury"
+type = "required"
+versionRange = "[22.0.3,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.itemzoomer]]
+modId = "cloth_config"
+type = "required"
+versionRange = "[26.3.159,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.itemzoomer]]
+modId = "jei"
+type = "optional"
+versionRange = "[31,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.itemzoomer]]
+modId = "rei"
+type = "optional"
+versionRange = "[26.0,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[mixins]]
+config = "itemzoomer.mixins.json"

@@ -4,6 +4,7 @@ import com.imeetake.itemzoomer.ItemZoomer;
 import com.imeetake.itemzoomer.accessor.ContainerScreenAccessor;
 import com.imeetake.itemzoomer.accessor.RecipeBookScreenAccessor;
 import com.imeetake.itemzoomer.compat.HoveredStackProviderRegistry;
+import com.imeetake.itemzoomer.compat.TooltipStackCapture;
 import com.imeetake.itemzoomer.config.ItemZoomerConfig;
 import com.imeetake.itemzoomer.mixin.GuiGraphicsAccessor;
 import com.mojang.logging.LogUtils;
@@ -49,6 +50,7 @@ public class ZoomedItemRenderer {
 
     public static void beginFrame() {
         animationState.beginFrame();
+        TooltipStackCapture.beginFrame();
         renderedThisFrame = false;
     }
 
@@ -118,6 +120,13 @@ public class ZoomedItemRenderer {
             ItemStack compatStack = HoveredStackProviderRegistry.getHoveredStack(mouseX, mouseY);
             if (compatStack != null && !compatStack.isEmpty()) {
                 liveStack = compatStack;
+            }
+        }
+
+        if ((liveStack == null || liveStack.isEmpty()) && accessor != null) {
+            ItemStack tooltipStack = TooltipStackCapture.previousFrameStack();
+            if (tooltipStack != null && !tooltipStack.isEmpty()) {
+                liveStack = tooltipStack;
             }
         }
 
@@ -531,9 +540,11 @@ public class ZoomedItemRenderer {
 
     public static void cleanup() {
         animationState.reset();
+        TooltipStackCapture.clear();
     }
 
     public static void onScreenClose() {
         animationState.reset();
+        TooltipStackCapture.clear();
     }
 }

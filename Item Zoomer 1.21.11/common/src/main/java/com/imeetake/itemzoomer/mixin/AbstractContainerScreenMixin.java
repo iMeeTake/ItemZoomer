@@ -57,7 +57,7 @@ public abstract class AbstractContainerScreenMixin implements ContainerScreenAcc
         return this.imageHeight;
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
+    @Inject(method = "renderContents", at = @At("TAIL"))
     private void itemzoomer$renderZoomBelowTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         ZoomedItemRenderer.render(guiGraphics, (Screen) (Object) this, mouseX, mouseY);
     }

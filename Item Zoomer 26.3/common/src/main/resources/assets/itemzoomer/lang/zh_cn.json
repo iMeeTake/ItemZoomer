@@ -1,0 +1,59 @@
+{
+    "key.category.itemzoomer.category": "Item Zoomer",
+    "key.itemzoomer.toggle_zoom": "切换 Item Zoomer",
+
+    "text.autoconfig.itemzoomer.title": "Item Zoomer 设置",
+
+    "text.autoconfig.itemzoomer.option.enabled": "启用",
+    "text.autoconfig.itemzoomer.option.enabled.@Tooltip": "启用或禁用本模组",
+
+    "text.autoconfig.itemzoomer.option.itemSizePercent": "物品大小（%）",
+    "text.autoconfig.itemzoomer.option.itemSizePercent.@Tooltip": "放大预览中物品的尺寸倍率（50-150%）",
+    "text.autoconfig.itemzoomer.option.itemSizePercent.value": "%s%%",
+
+    "text.autoconfig.itemzoomer.option.displayPosition": "显示位置",
+    "text.autoconfig.itemzoomer.option.displayPosition.@Tooltip": "放大预览的显示位置",
+
+    "text.autoconfig.itemzoomer.option.appearAnimation": "出现动画",
+    "text.autoconfig.itemzoomer.option.appearAnimation.@Tooltip": "放大预览出现时播放的动画",
+
+    "text.autoconfig.itemzoomer.option.appearDelayMs": "延迟（毫秒）",
+    "text.autoconfig.itemzoomer.option.appearDelayMs.@Tooltip": "从鼠标悬停在物品上到开始播放动画之间的延迟",
+    "text.autoconfig.itemzoomer.option.appearDelayMs.value": "%s 毫秒",
+
+    "text.autoconfig.itemzoomer.option.idleAnimation": "待机动画",
+    "text.autoconfig.itemzoomer.option.idleAnimation.@Tooltip": "鼠标悬停在物品上时持续播放的动画",
+
+    "text.autoconfig.itemzoomer.option.showItemInfo": "显示物品信息",
+    "text.autoconfig.itemzoomer.option.showItemInfo.@Tooltip": "显示物品名称、描述和附魔",
+
+    "text.autoconfig.itemzoomer.option.infoDelaySeconds": "信息延迟（秒）",
+    "text.autoconfig.itemzoomer.option.infoDelaySeconds.@Tooltip": "显示物品信息前的延迟",
+    "text.autoconfig.itemzoomer.option.infoDelaySeconds.value": "%s 秒",
+
+    "text.autoconfig.itemzoomer.option.favoritesOverlap": "收藏列表层级",
+    "text.autoconfig.itemzoomer.option.favoritesOverlap.@Tooltip": "放大预览位于配方查看器（JEI/REI）的物品列表或收藏列表之上时的表现：绘制在列表上方、绘制在列表下方，或在会遮挡列表时隐藏放大预览。提示框始终显示在最上层。",
+
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.above": "列表上方",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.below": "列表下方",
+    "text.autoconfig.itemzoomer.enum.favoritesoverlap.hide": "遮挡列表时隐藏",
+
+    "text.autoconfig.itemzoomer.enum.appearanimation.none": "无",
+    "text.autoconfig.itemzoomer.enum.appearanimation.fade": "淡入",
+    "text.autoconfig.itemzoomer.enum.appearanimation.scale": "缩放",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_left": "从左侧滑入",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_right": "从右侧滑入",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_top": "从顶部滑入",
+    "text.autoconfig.itemzoomer.enum.appearanimation.slide_bottom": "从底部滑入",
+
+    "text.autoconfig.itemzoomer.enum.idleanimation.none": "无",
+    "text.autoconfig.itemzoomer.enum.idleanimation.swing": "摆动",
+    "text.autoconfig.itemzoomer.enum.idleanimation.pulse": "脉动",
+
+    "text.autoconfig.itemzoomer.enum.displayposition.left": "左侧",
+    "text.autoconfig.itemzoomer.enum.displayposition.top_auto": "顶部（自动）",
+    "text.autoconfig.itemzoomer.enum.displayposition.top_always": "顶部（始终）",
+
+    "modmenu.descriptionTranslation.itemzoomer": "在物品栏中放大显示鼠标悬停的物品。",
+    "neoforge.screen.mods.info.description.itemzoomer": "在物品栏中放大显示鼠标悬停的物品。"
+}
