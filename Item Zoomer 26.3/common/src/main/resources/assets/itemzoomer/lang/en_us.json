@@ -31,6 +31,13 @@
     "text.autoconfig.itemzoomer.option.infoDelaySeconds.@Tooltip": "Delay before showing item info",
     "text.autoconfig.itemzoomer.option.infoDelaySeconds.value": "%s s",
 
+    "text.autoconfig.itemzoomer.option.fitItemInfoToScreen": "Fit Item Info",
+    "text.autoconfig.itemzoomer.option.fitItemInfoToScreen.@Tooltip": "Shrink the item info text when it is too tall, so the whole tooltip (description, prices, ...) still fits on screen instead of hiding everything after the item name and enchantments.",
+
+    "text.autoconfig.itemzoomer.option.minItemInfoScalePercent": "Minimum Info Scale (%)",
+    "text.autoconfig.itemzoomer.option.minItemInfoScalePercent.@Tooltip": "How small the info text may get when fitting it on screen (25-100%). If even this scale does not fit, only the item name and enchantments are shown.",
+    "text.autoconfig.itemzoomer.option.minItemInfoScalePercent.value": "%s%%",
+
     "text.autoconfig.itemzoomer.option.favoritesOverlap": "Favorites List Layer",
     "text.autoconfig.itemzoomer.option.favoritesOverlap.@Tooltip": "How the zoom behaves over a recipe viewer's item/favorites list (JEI/REI): draw above it, draw below it, or hide the zoom when it would overlap the list. Tooltips always stay on top.",
 

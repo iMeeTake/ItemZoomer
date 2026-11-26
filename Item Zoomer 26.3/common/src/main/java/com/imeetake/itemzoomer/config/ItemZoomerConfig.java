@@ -46,6 +46,13 @@ public class ItemZoomerConfig implements ConfigData {
     public int infoDelaySeconds = 2;
 
     @ConfigEntry.Gui.Tooltip
+    public boolean fitItemInfoToScreen = true;
+
+    @ConfigEntry.Gui.Tooltip
+    @ConfigEntry.BoundedDiscrete(min = 25, max = 100)
+    public int minItemInfoScalePercent = 50;
+
+    @ConfigEntry.Gui.Tooltip
     public FavoritesOverlap favoritesOverlap = FavoritesOverlap.HIDE;
 
     public void toggleEnabled() {
@@ -58,6 +65,7 @@ public class ItemZoomerConfig implements ConfigData {
         appearDelayMs = clamp(appearDelayMs, 0, 1000);
         itemSizePercent = clamp(itemSizePercent, 50, 150);
         infoDelaySeconds = clamp(infoDelaySeconds, 0, 10);
+        minItemInfoScalePercent = clamp(minItemInfoScalePercent, 25, 100);
 
         if (appearAnimation == null) {
             appearAnimation = AppearAnimation.FADE;
