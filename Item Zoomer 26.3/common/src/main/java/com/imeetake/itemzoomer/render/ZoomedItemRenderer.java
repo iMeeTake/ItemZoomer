@@ -373,9 +373,26 @@ public class ZoomedItemRenderer {
         int essentialLines = 1 + enchantmentCount;
 
         int maxWidth = Math.max(itemInfoWidth, 100);
+        ItemZoomerConfig config = ItemZoomerConfig.get();
 
-        int totalHeight = calculateTextHeight(font, tooltip, tooltip.size(), maxWidth);
+        int totalHeight = calculateTextHeight(font, tooltip, maxWidth, essentialLines, 1.0f);
         boolean showExtras = totalHeight <= availableHeight;
+        float fitScale = 1.0f;
+
+        if (!showExtras && config.fitItemInfoToScreen) {
+            // Shrink the whole info block until it fits instead of hiding everything
+            // after the name/enchantments (description, prices, ...).
+            float minScale = clamp(config.minItemInfoScalePercent, 25, 100) / 100.0f;
+
+            for (float candidate = 0.95f; candidate >= minScale - 0.001f; candidate -= 0.05f) {
+                if (calculateTextHeight(font, tooltip, maxWidth, essentialLines, candidate) <= availableHeight) {
+                    fitScale = candidate;
+                    showExtras = true;
+                    break;
+                }
+            }
+        }
+
         int linesToRender = showExtras ? tooltip.size() : essentialLines;
 
         float currentY = y;
@@ -387,7 +404,7 @@ public class ZoomedItemRenderer {
 
             if (plainText.trim().isEmpty()) {
                 if (i < linesToRender) {
-                    currentY += 6;
+                    currentY += 6 * fitScale;
                 }
                 continue;
             }
@@ -410,22 +427,23 @@ public class ZoomedItemRenderer {
                 lineScale = 0.75f;
             }
 
+            float drawScale = lineScale * fitScale;
             int color = ARGB.color(textAlphaInt, ARGB.red(baseColor), ARGB.green(baseColor), ARGB.blue(baseColor));
-            int scaledMaxWidth = (int) (maxWidth / lineScale);
+            int scaledMaxWidth = Math.max(1, (int) (maxWidth / drawScale));
 
             List<FormattedCharSequence> wrappedLines = font.split(line, scaledMaxWidth);
 
             for (FormattedCharSequence wrappedLine : wrappedLines) {
                 int lineWidth = font.width(wrappedLine);
-                float drawX = x + (itemInfoWidth - lineWidth * lineScale) / 2;
+                float drawX = x + (itemInfoWidth - lineWidth * drawScale) / 2;
 
-                if (lineScale != 1.0f) {
+                if (drawScale != 1.0f) {
                     graphics.pose().pushMatrix();
                     graphics.pose().translate(drawX, currentY);
-                    graphics.pose().scale(lineScale, lineScale);
+                    graphics.pose().scale(drawScale, drawScale);
                     graphics.text(font, wrappedLine, 0, 0, color, false);
                     graphics.pose().popMatrix();
-                    currentY += (int) (10 * lineScale);
+                    currentY += 10 * drawScale;
                 } else {
                     graphics.text(font, wrappedLine, (int) drawX, (int) currentY, color, false);
                     currentY += 10;
@@ -436,23 +454,24 @@ public class ZoomedItemRenderer {
         }
     }
 
-    private static int calculateTextHeight(Font font, List<Component> tooltip, int maxSourceLines, int maxWidth) {
+    private static int calculateTextHeight(Font font, List<Component> tooltip, int maxWidth, int essentialLines, float globalScale) {
         int height = 0;
 
-        for (int i = 0; i < Math.min(tooltip.size(), maxSourceLines); i++) {
+        for (int i = 0; i < tooltip.size(); i++) {
             Component line = tooltip.get(i);
             String plainText = line.getString();
 
             if (plainText.trim().isEmpty()) {
-                height += 6;
+                height += Math.max(1, Math.round(6 * globalScale));
                 continue;
             }
 
-            float lineScale = (i == 0 || i < maxSourceLines) ? 1.0f : 0.75f;
-            int scaledMaxWidth = (int) (maxWidth / lineScale);
+            float lineScale = i < essentialLines ? 1.0f : 0.75f;
+            float drawScale = lineScale * globalScale;
+            int scaledMaxWidth = Math.max(1, (int) (maxWidth / drawScale));
 
             List<FormattedCharSequence> wrappedLines = font.split(line, scaledMaxWidth);
-            height += (int) (10 * lineScale) * wrappedLines.size();
+            height += Math.max(1, Math.round(10 * drawScale)) * wrappedLines.size();
         }
 
         return height;
