@@ -27,7 +27,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 
@@ -39,6 +38,7 @@ public class ZoomedItemRenderer {
 
     private static final int PADDING = 5;
     private static final int BASE_SIZE = 115;
+    private static final int TEXT_GAP = 12;
     private static final float BACKING_SCREEN_SIZE_SCALE = 0.95f;
     private static final float MAX_IDLE_SCALE = 1.02f;
     private static final ModelFootprint NORMAL_MODEL_FOOTPRINT = new ModelFootprint(-0.5f, -0.5f, 0.5f, 0.5f);
@@ -212,11 +212,22 @@ public class ZoomedItemRenderer {
 
         float visualWidth = itemSize * horizontalFootprint;
         float visualHeight = itemSize * verticalFootprint;
+        int infoWidth = (int) Math.ceil(visualWidth);
+
+        // Lay out the item and the info block as one group so the text gets the whole
+        // screen height instead of only the space below a vertically centered item.
+        InfoLayout infoLayout = config.showItemInfo ? buildInfoLayout(mc, stack, infoWidth, visualHeight) : null;
+        float groupHeight = visualHeight + (infoLayout != null && infoLayout.height() > 0 ? TEXT_GAP + infoLayout.height() : 0.0f);
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
+        float groupTop = centerY - groupHeight / 2.0f;
+        float maxGroupTop = Math.max(PADDING, screenHeight - PADDING - groupHeight);
+        groupTop = Math.max(PADDING, Math.min(groupTop, maxGroupTop));
+        centerY = groupTop + visualHeight / 2.0f;
+
         float itemX = centerX - (visualWidth / 2.0f);
         float itemY = centerY - (visualHeight / 2.0f);
         float textX = itemX;
-        int textGap = 12;
-        float textY = itemY + visualHeight + textGap;
+        float textY = itemY + visualHeight + TEXT_GAP;
 
         float eased = easeOutCubic(progress);
         float alpha = 1.0f;
@@ -292,8 +303,8 @@ public class ZoomedItemRenderer {
 
         renderItemCount(graphics, mc, stack, itemX + offsetX, itemY + offsetY, visualWidth, visualHeight, alpha);
 
-        if (showInfo && textAlpha > 0) {
-            renderItemInfo(graphics, mc, stack, finalTextX, finalTextY, (int) Math.ceil(visualWidth), textAlpha * alpha);
+        if (showInfo && textAlpha > 0 && infoLayout != null) {
+            renderItemInfo(graphics, mc, infoLayout, finalTextX, finalTextY, (int) Math.ceil(visualWidth), textAlpha * alpha);
         }
     }
 
@@ -354,46 +365,57 @@ public class ZoomedItemRenderer {
         graphics.text(font, text, (int) textX, (int) textY, color, true);
     }
 
-    private static void renderItemInfo(GuiGraphicsExtractor graphics, Minecraft mc, ItemStack stack,
-                                       float x, float y, int itemInfoWidth, float alpha) {
-        if (alpha <= 0) return;
-
+    private static InfoLayout buildInfoLayout(Minecraft mc, ItemStack stack, int infoWidth, float itemVisualHeight) {
         Font font = mc.font;
         Item.TooltipContext tooltipContext = Item.TooltipContext.of(mc.level);
         List<Component> tooltip = stack.getTooltipLines(tooltipContext, mc.player, TooltipFlag.Default.NORMAL);
-        if (tooltip.isEmpty()) return;
+        if (tooltip.isEmpty()) {
+            return null;
+        }
 
-        int textAlphaInt = (int) (alpha * 255);
-
+        int essentialLines = 1 + stack.getEnchantments().size();
+        int maxWidth = Math.max(infoWidth, 100);
         int screenHeight = mc.getWindow().getGuiScaledHeight();
-        int availableHeight = (int) (screenHeight - y - 10);
+        int maxAvailableHeight = Math.max(0, (int) (screenHeight - PADDING * 2 - itemVisualHeight - TEXT_GAP));
 
-        ItemEnchantments enchantments = stack.getEnchantments();
-        int enchantmentCount = enchantments.size();
-        int essentialLines = 1 + enchantmentCount;
+        int fullHeight = calculateTextHeight(font, tooltip, maxWidth, essentialLines, tooltip.size(), 1.0f);
+        if (fullHeight <= maxAvailableHeight) {
+            return new InfoLayout(tooltip, tooltip.size(), essentialLines, 1.0f, fullHeight);
+        }
 
-        int maxWidth = Math.max(itemInfoWidth, 100);
         ItemZoomerConfig config = ItemZoomerConfig.get();
-
-        int totalHeight = calculateTextHeight(font, tooltip, maxWidth, essentialLines, 1.0f);
-        boolean showExtras = totalHeight <= availableHeight;
-        float fitScale = 1.0f;
-
-        if (!showExtras && config.fitItemInfoToScreen) {
+        if (config.fitItemInfoToScreen) {
             // Shrink the whole info block until it fits instead of hiding everything
             // after the name/enchantments (description, prices, ...).
             float minScale = clamp(config.minItemInfoScalePercent, 25, 100) / 100.0f;
 
             for (float candidate = 0.95f; candidate >= minScale - 0.001f; candidate -= 0.05f) {
-                if (calculateTextHeight(font, tooltip, maxWidth, essentialLines, candidate) <= availableHeight) {
-                    fitScale = candidate;
-                    showExtras = true;
-                    break;
+                int height = calculateTextHeight(font, tooltip, maxWidth, essentialLines, tooltip.size(), candidate);
+                if (height <= maxAvailableHeight) {
+                    return new InfoLayout(tooltip, tooltip.size(), essentialLines, candidate, height);
                 }
             }
         }
 
-        int linesToRender = showExtras ? tooltip.size() : essentialLines;
+        int compactHeight = calculateTextHeight(font, tooltip, maxWidth, essentialLines, essentialLines, 1.0f);
+        return new InfoLayout(tooltip, essentialLines, essentialLines, 1.0f, compactHeight);
+    }
+
+    private static void renderItemInfo(GuiGraphicsExtractor graphics, Minecraft mc, InfoLayout layout,
+                                       float x, float y, int itemInfoWidth, float alpha) {
+        if (alpha <= 0 || layout == null || layout.lines().isEmpty()) {
+            return;
+        }
+
+        Font font = mc.font;
+        List<Component> tooltip = layout.lines();
+        int essentialLines = layout.essentialLines();
+        int linesToRender = layout.renderedLines();
+        float fitScale = layout.scale();
+        boolean showExtras = linesToRender >= tooltip.size();
+
+        int textAlphaInt = (int) (alpha * 255);
+        int maxWidth = Math.max(itemInfoWidth, 100);
 
         float currentY = y;
         int sourceLineIndex = 0;
@@ -454,10 +476,12 @@ public class ZoomedItemRenderer {
         }
     }
 
-    private static int calculateTextHeight(Font font, List<Component> tooltip, int maxWidth, int essentialLines, float globalScale) {
+    private static int calculateTextHeight(Font font, List<Component> tooltip, int maxWidth, int essentialLines,
+                                           int lineLimit, float globalScale) {
         int height = 0;
+        int lines = Math.min(tooltip.size(), lineLimit);
 
-        for (int i = 0; i < tooltip.size(); i++) {
+        for (int i = 0; i < lines; i++) {
             Component line = tooltip.get(i);
             String plainText = line.getString();
 
@@ -483,6 +507,9 @@ public class ZoomedItemRenderer {
 
     private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private record InfoLayout(List<Component> lines, int renderedLines, int essentialLines, float scale, int height) {
     }
 
     private record ModelFootprint(float minX, float minY, float maxX, float maxY) {
